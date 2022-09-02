@@ -6,6 +6,7 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import ru.spbstu.icfpc2022.algo.AutocropDummy
 import ru.spbstu.icfpc2022.algo.DummyBlockAverager
 import ru.spbstu.icfpc2022.algo.Task
 import ru.spbstu.icfpc2022.imageParser.parseImage
@@ -85,15 +86,18 @@ fun submit(problemId: Int, code: String) {
     client.newCall(request).execute().also { println(it.body?.string()) }
 }
 
-fun main() {
+fun main() = try {
     val problems = getProblems()
     for (problem in problems.problems) {
         val im = parseImage(URL(problem.target_link))
 
         val task = Task(problem.id, im)
-        val solver = DummyBlockAverager(task, 1000)
-        val solution = solver.solve()
-        submit(problem.id, solution.joinToString("\n"))
+//        val solver = DummyBlockAverager(task, 1000)
+//        val solution = solver.solve()
+//        submit(problem.id, solution.joinToString("\n"))
+        val autocropDummy = AutocropDummy(task)
+        autocropDummy.solve()
     }
+} finally {
     client.connectionPool.evictAll()
 }
