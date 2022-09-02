@@ -89,6 +89,10 @@ data class SimpleBlock(
     override val shape: Shape,
     val color: Color
 ) : Block() {
+    init {
+        check(shape.size > 0L) { "empty blocks are prohibited" }
+    }
+
     override fun simpleChildren(): Sequence<SimpleBlock> = sequenceOf(this)
 }
 
@@ -97,6 +101,10 @@ data class ComplexBlock(
     override val shape: Shape,
     val children: Set<SimpleBlock>
 ) : Block() {
+    init {
+        check(shape.size > 0L) { "empty blocks are prohibited" }
+    }
+
     override fun simpleChildren(): Sequence<SimpleBlock> = children.asSequence()
 }
 
