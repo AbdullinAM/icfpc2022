@@ -9,7 +9,7 @@ import java.io.File
 class DumpSolutions(task: Task, tacticStorage: TacticStorage): Tactic(task, tacticStorage) {
     override fun invoke(state: PersistentState): PersistentState {
         File("solutions/").mkdirs()
-        state.canvas.toImage().forWriter(PngWriter(0)).write(File("solutions/${task.problemId}.png"))
+        state.canvas.toImage().flipY().forWriter(PngWriter(0)).write(File("solutions/${task.problemId}.png"))
         println("Task#${task.problemId}")
         println(state.score)
         return state

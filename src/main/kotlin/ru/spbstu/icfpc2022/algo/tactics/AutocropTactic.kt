@@ -17,9 +17,29 @@ import ru.spbstu.icfpc2022.move.Orientation
 import ru.spbstu.icfpc2022.move.PointCutMove
 import java.awt.Rectangle
 
-class AutocropTactic(task: Task, tacticStorage: TacticStorage) : BlockTactic(task, tacticStorage) {
+class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorTolerance: Int) : BlockTactic(task, tacticStorage) {
 
     companion object {
+
+        public fun approximatelyMatches(color1: Color, color2: Color, tolerance: Int): Boolean {
+            val refColor = color1
+            val minColor = Color(
+                (refColor.r - tolerance).coerceAtLeast(0),
+                (refColor.g - tolerance).coerceAtLeast(0),
+                (refColor.b - tolerance).coerceAtLeast(0),
+                (refColor.a - tolerance).coerceAtLeast(0)
+            )
+            val maxColor = Color(
+                (refColor.r + tolerance).coerceAtMost(255),
+                (refColor.g + tolerance).coerceAtMost(255),
+                (refColor.b + tolerance).coerceAtMost(255),
+                (refColor.a + tolerance).coerceAtMost(255),
+            )
+            return color2.r in minColor.r .. maxColor.r &&
+                    color2.g in minColor.g .. maxColor.g &&
+                    color2.b in minColor.b .. maxColor.b &&
+                    color2.a in minColor.a .. maxColor.a
+        }
 
         /**
          * Returns true if the colors of all pixels in the array are within the given tolerance
@@ -233,7 +253,7 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage) : BlockTactic(tas
 
         while (true) {
             val width = 10
-            val tolerance = 17
+            val tolerance = colorTolerance
             val shape = autocropState.state.canvas.blocks[autocropState.block]!!.shape
             val variants = mutableListOf(
                 Point(0, 0) to Point(shape.width, width),

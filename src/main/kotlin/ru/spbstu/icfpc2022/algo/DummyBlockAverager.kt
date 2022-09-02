@@ -25,7 +25,7 @@ class DummyBlockAverager(
 
         val colorBackground = ColorBackgroundTactic(task, tacticStorage)
         state = colorBackground(state)
-        val cutter = DummyCutter(task, tacticStorage, limit)
+        val cutter = DummyCutter(task, tacticStorage, limit, 17)
         state = cutter(state)
         state = ColorAverageTactic(task, tacticStorage)(state)
         val dumper = DumpSolutions(task, tacticStorage)

@@ -163,7 +163,7 @@ data class Canvas(
             val lowerX = minOf(first.shape.lowerLeft.x, second.shape.lowerLeft.x)
             val lowerY = minOf(first.shape.lowerLeft.y, second.shape.lowerLeft.y)
             val upperX = maxOf(first.shape.upperRight.x, second.shape.upperRight.x)
-            val upperY = minOf(first.shape.upperRight.y, second.shape.upperRight.y)
+            val upperY = maxOf(first.shape.upperRight.y, second.shape.upperRight.y)
 
             val children = mutableSetOf<SimpleBlock>()
             children.addAll(first.simpleChildren())

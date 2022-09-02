@@ -2,8 +2,10 @@ package ru.spbstu.icfpc2022.algo.tactics
 
 import ru.spbstu.icfpc2022.algo.PersistentState
 import ru.spbstu.icfpc2022.algo.Task
+import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic.Companion.approximatelyMatches
 import ru.spbstu.icfpc2022.canvas.BlockId
 import ru.spbstu.icfpc2022.canvas.Shape
+import ru.spbstu.icfpc2022.imageParser.color
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.getCanvasColor
 import ru.spbstu.icfpc2022.move.PointCutMove
@@ -11,14 +13,15 @@ import ru.spbstu.icfpc2022.move.PointCutMove
 class DummyCutter(
     task: Task,
     tacticStorage: TacticStorage,
-    val limit: Long
+    val limit: Long,
+    val colorTolerance: Int
 ) : BlockTactic(task, tacticStorage) {
     private fun allOneColour(shape: Shape): Boolean {
         val color = task.targetImage[shape.lowerLeft.x, shape.lowerLeft.y].getCanvasColor()
         for (x in shape.lowerLeft.x..shape.upperRight.x) {
             for (y in shape.lowerLeft.y..shape.upperRight.y) {
                 val pixel = task.targetImage[x, y]
-                if (color != pixel.getCanvasColor()) return false
+                if (!approximatelyMatches(color, pixel.color, colorTolerance)) return false
             }
         }
         return true

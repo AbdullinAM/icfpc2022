@@ -11,16 +11,22 @@ class AutocropDummy(task: Task) : Solver(task) {
             Canvas.empty(task.targetImage.width, task.targetImage.height)
         )
 
+        val colorTolerance = 27
+
         val storage = TacticStorage()
-        state = AutocropTactic(task, storage)(state, SimpleId(0))
+        state = AutocropTactic(task, storage, colorTolerance)(state, SimpleId(0))
 
         val previousBlocks = state.canvas.blocks.keys
         val dummyCutter = DummyCutter(
             task,
             storage,
-            3000
+            3000,
+            colorTolerance
         )
         state = dummyCutter.invoke(state)
+
+        val merger = MergerTactic(task, storage)
+        state = merger(state)
 
         val coloringBlocks = state.canvas.blocks.keys - previousBlocks
         for (block in coloringBlocks) {
