@@ -30,7 +30,6 @@ class PersistentState(
     val score = round(similarity * 0.05 + cost).toLong()
 
     fun move(move: Move): PersistentState {
-        println("ADDING MOVE")
         val newCost = cost + canvas.costOf(move)
         StateCollector.commandToCanvas.add(move to canvas.allSimpleBlocks().toList())
         return PersistentState(task, canvas.apply(move), commands.add(move), newCost)
