@@ -2,6 +2,7 @@ package ru.spbstu.icfpc2022.canvas
 
 import kotlinx.collections.immutable.PersistentMap
 import ru.spbstu.icfpc2022.move.*
+import kotlin.math.round
 
 
 data class Point(
@@ -44,6 +45,8 @@ data class Shape(
 
     val width: Int get() = upperRight.x - lowerLeft.x
     val height: Int get() = upperRight.y - lowerLeft.y
+
+    val size: Long get() = width.toLong() * height.toLong()
 }
 
 sealed class BlockId {
@@ -95,12 +98,23 @@ data class Canvas(
     val width: Int,
     val height: Int
 ) {
+    val size: Long get() = width.toLong() * height.toLong()
 
     fun allSimpleBlocks(): Sequence<SimpleBlock> = blocks.values.asSequence().flatMap {
         when (it) {
             is SimpleBlock -> sequenceOf(it)
             is ComplexBlock -> it.simpleChildren()
         }
+    }
+
+    private fun cost(base: Long, blockSize: Long) = round(base.toDouble() * size.toDouble() / blockSize).toLong()
+
+    fun costOf(move: Move): Long = when (move) {
+        is ColorMove -> cost(move.cost, blocks[move.block]!!.shape.size)
+        is LineCutMove -> cost(move.cost, blocks[move.block]!!.shape.size)
+        is MergeMove ->  cost(move.cost, maxOf(blocks[move.first]!!.shape.size, blocks[move.second]!!.shape.size))
+        is PointCutMove -> cost(move.cost, blocks[move.block]!!.shape.size)
+        is SwapMove -> cost(move.cost, maxOf(blocks[move.first]!!.shape.size, blocks[move.second]!!.shape.size))
     }
 
     fun apply(move: Move): Canvas = when (move) {
