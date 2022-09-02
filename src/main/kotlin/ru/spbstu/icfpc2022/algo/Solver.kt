@@ -8,7 +8,9 @@ import ru.spbstu.icfpc2022.canvas.Canvas
 import ru.spbstu.icfpc2022.canvas.Shape
 import ru.spbstu.icfpc2022.canvas.SimpleBlock
 import ru.spbstu.icfpc2022.imageParser.parseImage
+import ru.spbstu.icfpc2022.imageParser.score
 import ru.spbstu.icfpc2022.move.Move
+import kotlin.math.round
 
 data class Task(
     val problemId: Int,
@@ -23,6 +25,9 @@ class PersistentState(
     val commands: PersistentList<Move> = persistentListOf(),
     val cost: Long = 0L
 ) {
+    val similarity: Double get() = score(canvas, task.targetImage)
+    val score = round(similarity * 0.05 + cost).toLong()
+
     fun move(move: Move): PersistentState {
         val newCost = cost + canvas.costOf(move)
         return PersistentState(task, canvas.apply(move), commands.add(move), newCost)

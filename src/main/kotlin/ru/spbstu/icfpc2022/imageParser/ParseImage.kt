@@ -10,16 +10,29 @@ import java.net.URL
 import kotlin.math.sqrt
 
 fun parseImage(path: String) = ImmutableImage.loader().fromFile(File(path))
-fun parseImage(url: URL) = ImmutableImage.loader().fromStream(url.openStream())
+fun parseImage(url: URL) = ImmutableImage.loader().fromStream(url.openStream()).also {
+    it.flipY()
+}
 
-operator fun ImmutableImage.get(x: Int, y: Int): Pixel = this.pixel(x, this.height - 1 - y)
+
+fun Pixel.getCanvasColor() = Color(red(), green(), blue(), alpha())
+
+operator fun ImmutableImage.get(x: Int, y: Int): Pixel = this.pixel(x, y)
 
 fun Color.toAwt() = java.awt.Color(r.toInt(), g.toInt(), b.toInt(), a.toInt())
 
 fun Canvas.toImage(): ImmutableImage {
     var image = ImmutableImage.create(width, height)
     for (block in this.allSimpleBlocks()) {
-        image = image.overlay(ImmutableImage.filled(block.shape.width, block.shape.height, block.color.toAwt()))
+        image = image.overlay(
+            ImmutableImage.filled(
+                block.shape.width,
+                block.shape.height,
+                block.color.toAwt()
+            ),
+            block.shape.lowerLeft.x,
+            block.shape.lowerLeft.y
+        )
     }
     return image
 }
@@ -34,8 +47,8 @@ fun score(canvas: Canvas, target: ImmutableImage): Double {
     val cIm = canvas.toImage()
 
     return zip(target.iterator().asSequence(), cIm.iterator().asSequence()) { t, s ->
-        check (t.x == s.x)
-        check (t.y == s.y)
+        check(t.x == s.x)
+        check(t.y == s.y)
         euclid(t.red() - s.red(), t.green() - s.green(), t.blue() - s.blue(), t.alpha() - t.alpha())
     }.sum()
 }

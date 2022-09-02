@@ -91,7 +91,7 @@ fun main() {
         val im = parseImage(URL(problem.target_link))
 
         val task = Task(problem.id, im)
-        val solver = DummyBlockAverager(task, 2000)
+        val solver = DummyBlockAverager(task, 5000)
         val solution = solver.solve()
         submit(problem.id, solution.joinToString("\n"))
     }
