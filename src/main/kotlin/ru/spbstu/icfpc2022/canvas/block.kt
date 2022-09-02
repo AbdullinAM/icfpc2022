@@ -1,6 +1,8 @@
 package ru.spbstu.icfpc2022.canvas
 
+import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.PersistentSet
+import ru.spbstu.icfpc2022.move.*
 
 
 data class Point(
@@ -20,8 +22,15 @@ data class Color(
 }
 
 data class Shape(
-    val points: List<Point>
-)
+    val lowerLeft: Point,
+    val upperRight: Point
+) {
+    val upperLeft: Point = Point(lowerLeft.x, upperRight.y)
+    val lowerRight: Point = Point(upperRight.x, lowerLeft.y)
+
+    val width: Int get() = upperRight.x - lowerLeft.x
+    val height: Int get() = upperRight.y - lowerLeft.y
+}
 
 sealed class BlockId
 
@@ -39,21 +48,31 @@ data class ComplexId(
 
 sealed class Block {
     abstract val id: BlockId
+    abstract val shape: Shape
 }
 
 data class SimpleBlock(
     override val id: BlockId,
-    val shape: Shape,
+    override val shape: Shape,
     val color: Color
 ) : Block()
 
 data class ComplexBlock(
     override val id: BlockId,
+    override val shape: Shape,
     val children: Set<Block>
 ) : Block()
 
 
 data class Canvas(
     val blockId: Int,
-    val blocks: PersistentSet<Block>
-)
+    val blocks: PersistentMap<BlockId, Block>
+) {
+    fun apply(move: Move): Canvas = when (move) {
+        is LineCutMove -> TODO()
+        is ColorMove -> TODO()
+        is MergeMove -> TODO()
+        is PointCutMove -> TODO()
+        is SwapMove -> TODO()
+    }
+}
