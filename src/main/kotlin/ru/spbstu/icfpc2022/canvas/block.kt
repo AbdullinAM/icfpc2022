@@ -10,6 +10,7 @@ import ru.spbstu.icfpc2022.move.Orientation
 import ru.spbstu.icfpc2022.move.PointCutMove
 import ru.spbstu.icfpc2022.move.SwapMove
 import kotlin.math.round
+import kotlin.math.sqrt
 
 
 data class Point(
@@ -20,6 +21,7 @@ data class Point(
 
     fun add(other: Point) = Point(x + other.x, y + other.y)
     fun subtract(other: Point) = Point(x - other.x, y - other.y)
+    fun distance(other: Point) = sqrt((x.toDouble() - other.x).let { it * it } + (y.toDouble() - other.y).let { it * it })
 
     fun isStrictlyInside(bottomLeft: Point, topRight: Point): Boolean =
         bottomLeft.x < x

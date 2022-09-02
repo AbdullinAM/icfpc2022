@@ -4,20 +4,22 @@ import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.pixels.Pixel
 import ru.spbstu.icfpc2022.canvas.Canvas
 import ru.spbstu.icfpc2022.canvas.Color
+import ru.spbstu.icfpc2022.canvas.Point
 import ru.spbstu.ktuples.zip
 import java.io.File
 import java.net.URL
 import kotlin.math.sqrt
 
-fun parseImage(path: String) = ImmutableImage.loader().fromFile(File(path))
-fun parseImage(url: URL) = ImmutableImage.loader().fromStream(url.openStream()).also {
-    it.flipY()
-}
-
+fun parseImage(path: String) = ImmutableImage.loader().fromFile(File(path)).flipY()
+fun parseImage(url: URL) = ImmutableImage.loader().fromStream(url.openStream()).flipY()
 
 fun Pixel.getCanvasColor() = Color(red(), green(), blue(), alpha())
 
 operator fun ImmutableImage.get(x: Int, y: Int): Pixel = this.pixel(x, y)
+fun ImmutableImage.getOrNull(x: Int, y: Int): Pixel? = when {
+    x >= width || y >= height || x < 0 || y < 0 -> null
+    else -> pixel(x, y)
+}
 
 fun Color.toAwt() = java.awt.Color(r.toInt(), g.toInt(), b.toInt(), a.toInt())
 
@@ -54,6 +56,7 @@ fun score(canvas: Canvas, target: ImmutableImage): Double {
 }
 
 val Pixel.color: Color get() = Color(red(), green(), blue(), alpha())
+val Pixel.point: Point get() = Point(x, y)
 
 fun main() {
     val im = parseImage(URL("https://cdn.robovinci.xyz/imageframes/2.png"))
