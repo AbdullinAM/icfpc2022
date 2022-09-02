@@ -9,7 +9,12 @@ import ru.spbstu.icfpc2022.canvas.SimpleId
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.move.ColorMove
 
-class ColorAverageTactic(task: Task, val backgroundColor: Color?): BlockTactic(task) {
+class ColorAverageTactic(task: Task, tacticStorage: TacticStorage): BlockTactic(task, tacticStorage) {
+    val backgroundTactic: ColorBackgroundTactic?
+        get() = storage.get()
+    val backgroundColor: Color?
+        get() = backgroundTactic?.resultingColor
+
     private fun computeBlockAverage(shape: Shape): Color {
         var r = 0L
         var g = 0L
@@ -51,15 +56,15 @@ class ColorAverageTactic(task: Task, val backgroundColor: Color?): BlockTactic(t
         )
     }
 
-    lateinit var resultingColor: Color
+    var resultingColor: Color? = null
         private set;
 
     override operator fun invoke(state: PersistentState, blockId: BlockId): PersistentState {
         var state = state
         val block = state.canvas.blocks[blockId]!!
         val avg = computeBlockAverage2(block.shape)
-        resultingColor = avg
         if (avg == backgroundColor) return state
+        resultingColor = avg
 
         val colorMove = ColorMove(blockId, avg)
         state = state.move(colorMove)
@@ -68,10 +73,10 @@ class ColorAverageTactic(task: Task, val backgroundColor: Color?): BlockTactic(t
 
 }
 
-class ColorBackgroundTactic(task: Task): Tactic(task) {
-    val sub = ColorAverageTactic(task, null)
+class ColorBackgroundTactic(task: Task, tacticStorage: TacticStorage): Tactic(task, tacticStorage) {
+    val sub = ColorAverageTactic(task, tacticStorage)
 
-    val resultingColor: Color get() = sub.resultingColor
+    val resultingColor: Color? get() = sub.resultingColor
 
     override fun invoke(state: PersistentState): PersistentState {
         val bgBlock = SimpleId(0)

@@ -52,5 +52,3 @@ abstract class Solver(
 ) {
     abstract fun solve(): List<Move>
 }
-
-typealias Tactic = (PersistentState) -> PersistentState

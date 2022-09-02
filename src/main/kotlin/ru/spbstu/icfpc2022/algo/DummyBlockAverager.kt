@@ -1,10 +1,18 @@
 package ru.spbstu.icfpc2022.algo
 
-import ru.spbstu.icfpc2022.algo.tactics.ColorAverageTactic
-import ru.spbstu.icfpc2022.algo.tactics.ColorBackgroundTactic
-import ru.spbstu.icfpc2022.algo.tactics.DummyCutter
-import ru.spbstu.icfpc2022.algo.tactics.DumpSolutions
+import ru.spbstu.icfpc2022.algo.tactics.*
 import ru.spbstu.icfpc2022.move.Move
+
+fun solve(task: Task, vararg tactics: (Task, TacticStorage) -> Tactic): List<Move> {
+    var state = PersistentState(task)
+    val storage = TacticStorage()
+
+    val tacticList = tactics.map { it(task, storage) }
+
+    for (tactic in tacticList) state = tactic(state)
+
+    return state.commands
+}
 
 class DummyBlockAverager(
     task: Task,
@@ -13,13 +21,14 @@ class DummyBlockAverager(
 
     override fun solve(): List<Move> {
         var state = PersistentState(task)
+        val tacticStorage = TacticStorage()
 
-        val colorBackground = ColorBackgroundTactic(task)
+        val colorBackground = ColorBackgroundTactic(task, tacticStorage)
         state = colorBackground(state)
-        val cutter = DummyCutter(task, limit)
+        val cutter = DummyCutter(task, tacticStorage, limit)
         state = cutter(state)
-        state = ColorAverageTactic(task, backgroundColor = colorBackground.resultingColor)(state)
-        val dumper = DumpSolutions(task)
+        state = ColorAverageTactic(task, tacticStorage)(state)
+        val dumper = DumpSolutions(task, tacticStorage)
         dumper(state)
         return state.commands
     }
