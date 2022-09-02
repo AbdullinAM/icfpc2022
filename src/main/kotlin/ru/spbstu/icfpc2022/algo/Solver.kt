@@ -19,7 +19,7 @@ data class Task(
 
 class PersistentState(
     val task: Task,
-    val canvas: Canvas,
+    val canvas: Canvas = Canvas.empty(task.targetImage.width, task.targetImage.height),
     val commands: PersistentList<Move> = persistentListOf(),
     val cost: Long = 0L
 ) {
