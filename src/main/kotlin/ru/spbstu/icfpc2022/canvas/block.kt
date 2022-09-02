@@ -101,20 +101,6 @@ data class Canvas(
     val width: Int,
     val height: Int
 ) {
-
-    constructor(width: Int, height: Int) : this(
-        0,
-        persistentMapOf(
-            SimpleId(0) to SimpleBlock(
-                SimpleId(0),
-                Shape(Point(0, 0), Point(width, height)),
-                Color(255, 255, 255, 255)
-            )
-        ),
-        width,
-        height
-    )
-
     val size: Long get() = width.toLong() * height.toLong()
 
     fun allSimpleBlocks(): Sequence<SimpleBlock> = blocks.values.asSequence().flatMap {
@@ -594,7 +580,7 @@ data class Canvas(
             val mainBlockId = SimpleId(0)
             return Canvas(
                 0,
-                persistentMapOf(mainBlockId to SimpleBlock(mainBlockId, Shape(Point(0, 0), Point(width - 1, height - 1)), Color(255.toByte(),255.toByte(),255.toByte(),255.toByte()))),
+                persistentMapOf(mainBlockId to SimpleBlock(mainBlockId, Shape(Point(0, 0), Point(width - 1, height - 1)), Color(255, 255, 255, 255))),
                 width, height
             )
         }

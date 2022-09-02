@@ -6,14 +6,14 @@ import ru.spbstu.icfpc2022.canvas.Canvas
 import ru.spbstu.icfpc2022.move.Move
 
 class DummyBlockAverager(
-    task: ImmutableImage
+    task: Task
 ) : Solver(task) {
 
 
     override fun solve(): List<Move> {
         var state = PersistentState(
             task,
-            Canvas(task.width, task.height)
+            Canvas.empty(task.targetImage.width, task.targetImage.height)
         )
 
         val queue = ArrayDeque<BlockId>()
