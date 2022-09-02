@@ -8,7 +8,7 @@ import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.getCanvasColor
 import ru.spbstu.icfpc2022.move.PointCutMove
 
-class DummyCutter(task: Task, val limit: Long): Tactic(task) {
+class DummyCutter(task: Task, tacticStorage: TacticStorage, val limit: Long): Tactic(task, tacticStorage) {
     private fun allOneColour(shape: Shape): Boolean {
         val color = task.targetImage[shape.lowerLeft.x, shape.lowerLeft.y].getCanvasColor()
         for (x in shape.lowerLeft.x..shape.upperRight.x) {
