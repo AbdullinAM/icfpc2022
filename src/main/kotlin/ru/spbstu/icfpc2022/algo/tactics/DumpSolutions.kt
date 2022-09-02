@@ -10,6 +10,7 @@ class DumpSolutions(task: Task, tacticStorage: TacticStorage): Tactic(task, tact
     override fun invoke(state: PersistentState): PersistentState {
         File("solutions/").mkdirs()
         state.canvas.toImage().forWriter(PngWriter(0)).write(File("solutions/${task.problemId}.png"))
+        println("Task#${task.problemId}")
         println(state.score)
         return state
     }

@@ -59,6 +59,8 @@ data class Shape(
     val size: Long get() = width.toLong() * height.toLong()
 
     val middle: Point = Point(lowerLeft.x + width / 2, lowerLeft.y + height / 2)
+
+    fun boundPoints() = setOf(lowerLeft, upperLeft, upperRight, lowerRight)
 }
 
 sealed class BlockId {

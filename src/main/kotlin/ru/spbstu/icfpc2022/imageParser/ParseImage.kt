@@ -49,7 +49,7 @@ fun score(canvas: Canvas, target: ImmutableImage): Double {
     return zip(target.iterator().asSequence(), cIm.iterator().asSequence()) { t, s ->
         check(t.x == s.x)
         check(t.y == s.y)
-        euclid(t.red() - s.red(), t.green() - s.green(), t.blue() - s.blue(), t.alpha() - t.alpha())
+        euclid(t.red() - s.red(), t.green() - s.green(), t.blue() - s.blue(), t.alpha() - s.alpha())
     }.sum()
 }
 
