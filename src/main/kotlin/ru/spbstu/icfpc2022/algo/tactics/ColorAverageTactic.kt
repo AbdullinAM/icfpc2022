@@ -31,27 +31,6 @@ class ColorAverageTactic(task: Task, tacticStorage: TacticStorage): BlockTactic(
         return Color((r / count).toInt(), (g / count).toInt(), (b / count).toInt(), (a / count).toInt())
     }
 
-    private fun computeBlockAverage2(shape: Shape): Color {
-        val red = IntArray(256)
-        val green = IntArray(256)
-        val blue = IntArray(256)
-        val alpha = IntArray(256)
-        for (x in shape.lowerLeft.x..shape.upperRight.x) {
-            for (y in shape.lowerLeft.y..shape.upperRight.y) {
-                val pixel = task.targetImage[x, y]
-                red[pixel.red()]++
-                green[pixel.green()]++
-                blue[pixel.blue()]++
-                alpha[pixel.alpha()]++
-            }
-        }
-        return Color(
-            red.withIndex().maxBy { it.value }.index,
-            green.withIndex().maxBy { it.value }.index,
-            blue.withIndex().maxBy { it.value }.index,
-            alpha.withIndex().maxBy { it.value }.index,
-        )
-    }
 
     var resultingColor: Color? = null
         private set;

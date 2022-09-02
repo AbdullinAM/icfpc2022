@@ -18,7 +18,7 @@ class AutocropDummy(task: Task) : Solver(task) {
         val dummyCutter = DummyCutter(
             task,
             storage,
-            8000
+            3000
         )
         state = dummyCutter.invoke(state)
 

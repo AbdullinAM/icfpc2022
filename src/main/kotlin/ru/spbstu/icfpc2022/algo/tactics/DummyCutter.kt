@@ -36,7 +36,6 @@ class DummyCutter(
             if (currentBlock.shape.size <= limit) continue
             if (allOneColour(currentBlock.shape)) continue
 
-
             var middlePoint = currentBlock.shape.middle
 
             when (val snap = task.closestSnap(middlePoint, currentBlock.shape)) {
