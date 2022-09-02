@@ -49,24 +49,37 @@ data class ComplexId(
 sealed class Block {
     abstract val id: BlockId
     abstract val shape: Shape
+
+    abstract fun simpleChildren(): Sequence<SimpleBlock>
 }
 
 data class SimpleBlock(
     override val id: BlockId,
     override val shape: Shape,
     val color: Color
-) : Block()
+) : Block() {
+    override fun simpleChildren(): Sequence<SimpleBlock> = sequenceOf(this)
+}
 
 data class ComplexBlock(
     override val id: BlockId,
     override val shape: Shape,
     val children: Set<Block>
-) : Block()
+) : Block() {
+    override fun simpleChildren(): Sequence<SimpleBlock> = children.asSequence().flatMap {
+        when (it) {
+            is SimpleBlock -> sequenceOf(it)
+            is ComplexBlock -> it.simpleChildren()
+        }
+    }
+}
 
 
 data class Canvas(
     val blockId: Int,
-    val blocks: PersistentMap<BlockId, Block>
+    val blocks: PersistentMap<BlockId, Block>,
+    val width: Int,
+    val height: Int
 ) {
     fun apply(move: Move): Canvas = when (move) {
         is LineCutMove -> TODO()
@@ -74,5 +87,12 @@ data class Canvas(
         is MergeMove -> TODO()
         is PointCutMove -> TODO()
         is SwapMove -> TODO()
+    }
+
+    fun allSimpleBlocks(): Sequence<SimpleBlock> = blocks.values.asSequence().flatMap {
+        when (it) {
+            is SimpleBlock -> sequenceOf(it)
+            is ComplexBlock -> it.simpleChildren()
+        }
     }
 }
