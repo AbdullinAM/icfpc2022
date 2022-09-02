@@ -4,8 +4,8 @@ import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.pixels.Pixel
 import ru.spbstu.icfpc2022.canvas.Canvas
 import ru.spbstu.icfpc2022.canvas.Color
-import ru.spbstu.icfpc2022.canvas.Shape
 import ru.spbstu.icfpc2022.canvas.Point
+import ru.spbstu.icfpc2022.canvas.Shape
 import ru.spbstu.ktuples.zip
 import java.io.File
 import java.net.URL
@@ -29,10 +29,12 @@ fun Color.toAwt() = java.awt.Color(r.toInt(), g.toInt(), b.toInt(), a.toInt())
 fun Canvas.toImage(): ImmutableImage {
     var image = ImmutableImage.create(width, height)
     for (block in this.allSimpleBlocks()) {
+        val w = block.shape.width + if (block.shape.upperRight.x == width - 1) 1 else 0
+        val h = block.shape.height + if (block.shape.upperRight.y == height - 1) 1 else 0
         image = image.overlay(
             ImmutableImage.filled(
-                block.shape.width,
-                block.shape.height,
+                w,
+                h,
                 block.color.toAwt()
             ),
             block.shape.lowerLeft.x,
