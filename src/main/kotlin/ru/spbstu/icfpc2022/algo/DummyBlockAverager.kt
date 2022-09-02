@@ -103,6 +103,7 @@ class DummyBlockAverager(
             state = state.move(colorMove)
         }
 
+        File("solutions/").mkdirs()
         state.canvas.toImage().forWriter(PngWriter(0)).write(File("solutions/${task.problemId}.png"))
         println(state.score)
         return state.commands
