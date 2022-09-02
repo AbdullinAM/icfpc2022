@@ -40,6 +40,8 @@ fun score(canvas: Canvas, target: ImmutableImage): Double {
     }.sum()
 }
 
+val Pixel.color: Color get() = Color(red(), green(), blue(), alpha())
+
 fun main() {
     val im = parseImage(URL("https://cdn.robovinci.xyz/imageframes/2.png"))
     var r = im.iterator().asSequence().map { it.red() }.average().toInt()
