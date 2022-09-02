@@ -27,7 +27,7 @@ class PersistentState(
     val cost: Long = 0L
 ) {
     val similarity: Double get() = score(canvas, task.targetImage)
-    val score = round(similarity * 0.05 + cost).toLong()
+    val score = round(similarity * 0.005).toLong() + cost
 
     fun move(move: Move): PersistentState {
         val newCost = cost + canvas.costOf(move)
