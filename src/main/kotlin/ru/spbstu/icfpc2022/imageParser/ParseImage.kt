@@ -10,10 +10,8 @@ import java.io.File
 import java.net.URL
 import kotlin.math.sqrt
 
-fun parseImage(path: String) = ImmutableImage.loader().fromFile(File(path))
-fun parseImage(url: URL) = ImmutableImage.loader().fromStream(url.openStream()).also {
-    it.flipY()
-}
+fun parseImage(path: String) = ImmutableImage.loader().fromFile(File(path)).flipY()
+fun parseImage(url: URL) = ImmutableImage.loader().fromStream(url.openStream()).flipY()
 
 
 fun Pixel.getCanvasColor() = Color(red(), green(), blue(), alpha())
