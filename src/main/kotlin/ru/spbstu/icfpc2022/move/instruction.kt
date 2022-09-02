@@ -33,15 +33,15 @@ data class ColorMove(
 }
 
 data class SwapMove(
-    val first: String,
-    val second: String
+    val first: BlockId,
+    val second: BlockId
 ) : Move() {
     override fun toString(): String = "swap [$first] [$second]"
 }
 
 data class MergeMove(
-    val first: String,
-    val second: String
+    val first: BlockId,
+    val second: BlockId
 ) : Move() {
     override fun toString(): String = "merge [$first] [$second]"
 }
