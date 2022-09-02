@@ -289,14 +289,18 @@ class AutocropDummy(task: Task) : Solver(task) {
         }
 
         val storage = TacticStorage()
+        val previousBlocks = state.state.canvas.blocks.keys
         val dummyCutter = DummyCutter(
             task,
             storage,
-            2000
+            8000
         )
         var newState = dummyCutter.invoke(state.state)
 
-        newState = ColorAverageTactic(task, storage)(newState)
+        val coloringBlocks = newState.canvas.blocks.keys - previousBlocks
+        for (block in coloringBlocks) {
+            newState = ColorAverageTactic(task, storage)(newState, block)
+        }
         val dumper = DumpSolutions(task, storage)
         dumper(newState)
         return newState.commands
