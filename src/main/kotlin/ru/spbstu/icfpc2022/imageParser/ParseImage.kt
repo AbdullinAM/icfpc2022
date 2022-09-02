@@ -59,6 +59,7 @@ fun score(canvas: Canvas, target: ImmutableImage): Double {
 }
 
 val Pixel.color: Color get() = Color(red(), green(), blue(), alpha())
+val Pixel.point: Point get() = Point(x, y)
 
 fun main() {
     val im = parseImage(URL("https://cdn.robovinci.xyz/imageframes/2.png"))

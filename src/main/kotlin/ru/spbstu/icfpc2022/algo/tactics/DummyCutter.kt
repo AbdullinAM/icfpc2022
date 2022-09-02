@@ -39,10 +39,10 @@ class DummyCutter(
 
             var middlePoint = currentBlock.shape.middle
 
-//            when (val snap = task.closestSnap(middlePoint, currentBlock.shape)) {
-//                null -> {}
-//                else -> middlePoint = snap
-//            }
+            when (val snap = task.closestSnap(middlePoint, currentBlock.shape)) {
+                null -> {}
+                else -> middlePoint = snap
+            }
 
             val cut = PointCutMove(current, middlePoint)
             val blocksBefore = state.canvas.blocks.keys
