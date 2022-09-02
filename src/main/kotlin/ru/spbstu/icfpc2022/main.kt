@@ -7,7 +7,7 @@ import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import tornadofx.launch
 
 fun main() {
-    val problemId = 3
+    val problemId = 1
     StateCollector.pathToProblemImage = "problems/$problemId.png"
     val commands = DummyBlockAverager(Task(problemId), 1000).solve()
     println("Solution size: ${commands.size}")

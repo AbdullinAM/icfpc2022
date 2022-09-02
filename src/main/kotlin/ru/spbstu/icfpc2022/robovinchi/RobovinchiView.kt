@@ -27,19 +27,13 @@ class RobovinchiView : View() {
             val width = block.shape.width.toDouble()
             val height = block.shape.height.toDouble()
             val rectangle = Rectangle(xCoor, yCoor, width, height).apply {
-                val opacity =
-                    if (block.color.r == 0 && block.color.b == 0 && block.color.g == 0) {
-                        0.0
-                    } else {
-                        block.color.a.toDouble() / 255
-                    }
                 fill = Color(
                     block.color.r.toDouble() / 255,
                     block.color.g.toDouble() / 255,
                     block.color.b.toDouble() / 255,
-                    opacity
+                    block.color.a.toDouble() / 255
                 )
-                stroke = Color.BLACK
+                stroke = Color.RED
             }
             rectangles.add(rectangle)
         }
@@ -80,7 +74,7 @@ class RobovinchiView : View() {
                         layoutX = 0.0
                         layoutY = 500.0
                     }
-                    if (curStep >= StateCollector.commandToCanvas.size - 1) return@action
+                    if (curStep >= StateCollector.commandToCanvas.size) return@action
                     curRectangles.forEach { globalPane.children.remove(it) }
                     val rects = getRectanglesFromBlocks()
                     rects.forEach { rect ->
@@ -94,6 +88,31 @@ class RobovinchiView : View() {
             }
             layoutX = 500.0
             layoutY = 500.0
+        }
+        pane {
+            button("Prev") {
+                action {
+                    curStep.set(curStep.value - 1)
+                    curStepPane.apply {
+                        clear()
+                        text(curStep.toString()).attachTo(this)
+                        layoutX = 0.0
+                        layoutY = 500.0
+                    }
+                    if (curStep >= StateCollector.commandToCanvas.size) return@action
+                    curRectangles.forEach { globalPane.children.remove(it) }
+                    val rects = getRectanglesFromBlocks()
+                    rects.forEach { rect ->
+                        rect.attachTo(globalPane).also { curRectangles.add(it) }
+                    }
+                    curCommand.set(nextCommand.value)
+                    val newNextCommand =
+                        StateCollector.commandToCanvas.getOrNull(curStep.value + 1)?.first?.toString() ?: "END"
+                    nextCommand.set(newNextCommand)
+                }
+            }
+            layoutX = 500.0
+            layoutY = 535.0
         }
         scrollpane {
             ScrollBar().attachTo(this).apply {
