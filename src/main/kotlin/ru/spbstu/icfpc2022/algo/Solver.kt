@@ -10,6 +10,7 @@ import ru.spbstu.icfpc2022.canvas.SimpleBlock
 import ru.spbstu.icfpc2022.imageParser.parseImage
 import ru.spbstu.icfpc2022.imageParser.score
 import ru.spbstu.icfpc2022.move.Move
+import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import kotlin.math.round
 
 data class Task(
@@ -29,7 +30,9 @@ class PersistentState(
     val score = round(similarity * 0.05 + cost).toLong()
 
     fun move(move: Move): PersistentState {
+        println("ADDING MOVE")
         val newCost = cost + canvas.costOf(move)
+        StateCollector.commandToCanvas.add(move to canvas.allSimpleBlocks().toList())
         return PersistentState(task, canvas.apply(move), commands.add(move), newCost)
     }
 
