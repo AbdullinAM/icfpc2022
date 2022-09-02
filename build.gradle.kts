@@ -7,6 +7,7 @@
 plugins {
     java
     kotlin("jvm") version "1.7.10"
+    id("org.openjfx.javafxplugin") version "0.0.13"
     application
 }
 
@@ -29,9 +30,16 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.2.0")
 
     implementation("com.sksamuel.scrimage:scrimage-core:4.0.32")
+    implementation("no.tornado:tornadofx:1.7.20")
 
     testImplementation(kotlin("test"))
 }
+
+javafx {
+    version = "11.0.2"
+    modules = listOf("javafx.controls", "javafx.graphics")
+}
+
 
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
