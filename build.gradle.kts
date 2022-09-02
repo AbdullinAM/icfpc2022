@@ -27,6 +27,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3")
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
 
+    implementation("com.sksamuel.scrimage:scrimage-core:4.0.32")
+
     testImplementation(kotlin("test"))
 }
 
