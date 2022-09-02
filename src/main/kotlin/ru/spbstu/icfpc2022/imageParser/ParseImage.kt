@@ -11,11 +11,11 @@ fun parseImage(url: URL) = ImmutableImage.loader().fromStream(url.openStream())
 fun ImmutableImage.get(x: Int, y: Int) = this.pixel(x, y)
 
 fun main() {
-    val im = parseImage(URL("https://cdn.robovinci.xyz/imageframes/4.png"))
+    val im = parseImage(URL("https://cdn.robovinci.xyz/imageframes/2.png"))
     var r = im.iterator().asSequence().map { it.red() }.average().toInt()
     var g = im.iterator().asSequence().map { it.green() }.average().toInt()
     var b = im.iterator().asSequence().map { it.blue() }.average().toInt()
     var a = im.iterator().asSequence().map { it.alpha() }.average().toInt()
 
-    println(Pixel(0, 0, r, g, b, a).argb.toULong().toString(16))
+    println("color [0] [$r,$g,$b,$a]")
 }
