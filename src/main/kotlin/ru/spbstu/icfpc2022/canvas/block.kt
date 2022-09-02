@@ -113,14 +113,8 @@ data class Canvas(
             val upperY = minOf(first.shape.upperRight.y, second.shape.upperRight.y)
 
             val children = mutableSetOf<SimpleBlock>()
-            when (first) {
-                is SimpleBlock -> children += first
-                is ComplexBlock -> children.addAll(first.children)
-            }
-            when (second) {
-                is SimpleBlock -> children += second
-                is ComplexBlock -> children.addAll(second.children)
-            }
+            children.addAll(first.simpleChildren())
+            children.addAll(second.simpleChildren())
 
             val complex = ComplexBlock(
                 SimpleId(blockId + 1),
