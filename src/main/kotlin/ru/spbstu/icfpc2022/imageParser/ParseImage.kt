@@ -4,6 +4,7 @@ import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.pixels.Pixel
 import ru.spbstu.icfpc2022.canvas.Canvas
 import ru.spbstu.icfpc2022.canvas.Color
+import ru.spbstu.icfpc2022.canvas.Shape
 import ru.spbstu.icfpc2022.canvas.Point
 import ru.spbstu.ktuples.zip
 import java.io.File
@@ -20,6 +21,8 @@ fun ImmutableImage.getOrNull(x: Int, y: Int): Pixel? = when {
     x >= width || y >= height || x < 0 || y < 0 -> null
     else -> pixel(x, y)
 }
+
+fun ImmutableImage.subimage(shape: Shape): ImmutableImage = subimage(shape.lowerLeft.x, shape.lowerLeft.y, shape.width, shape.height)
 
 fun Color.toAwt() = java.awt.Color(r.toInt(), g.toInt(), b.toInt(), a.toInt())
 
@@ -56,7 +59,6 @@ fun score(canvas: Canvas, target: ImmutableImage): Double {
 }
 
 val Pixel.color: Color get() = Color(red(), green(), blue(), alpha())
-val Pixel.point: Point get() = Point(x, y)
 
 fun main() {
     val im = parseImage(URL("https://cdn.robovinci.xyz/imageframes/2.png"))
