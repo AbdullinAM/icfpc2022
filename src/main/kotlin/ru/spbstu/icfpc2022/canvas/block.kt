@@ -1,12 +1,7 @@
 package ru.spbstu.icfpc2022.canvas
 
 import kotlinx.collections.immutable.PersistentMap
-import ru.spbstu.icfpc2022.move.ColorMove
-import ru.spbstu.icfpc2022.move.LineCutMove
-import ru.spbstu.icfpc2022.move.MergeMove
-import ru.spbstu.icfpc2022.move.Move
-import ru.spbstu.icfpc2022.move.PointCutMove
-import ru.spbstu.icfpc2022.move.SwapMove
+import ru.spbstu.icfpc2022.move.*
 
 
 data class Point(
@@ -51,7 +46,9 @@ data class Shape(
     val height: Int get() = upperRight.y - lowerLeft.y
 }
 
-sealed class BlockId
+sealed class BlockId {
+    operator fun plus(number: Int): BlockId = ComplexId(this, number)
+}
 
 data class SimpleId(val id: Int) : BlockId() {
     override fun toString(): String = "$id"
@@ -68,6 +65,8 @@ data class ComplexId(
 sealed class Block {
     abstract val id: BlockId
     abstract val shape: Shape
+
+    abstract fun simpleChildren(): Sequence<SimpleBlock>
     abstract fun withId(newId: BlockId): Block
 }
 
@@ -77,6 +76,7 @@ data class SimpleBlock(
     val color: Color
 ) : Block() {
     override fun withId(newId: BlockId): Block = SimpleBlock(newId, shape, color)
+    override fun simpleChildren(): Sequence<SimpleBlock> = sequenceOf(this)
 }
 
 data class ComplexBlock(
@@ -85,19 +85,208 @@ data class ComplexBlock(
     val children: Set<SimpleBlock>
 ) : Block() {
     override fun withId(newId: BlockId): Block = ComplexBlock(newId, shape, children)
+    override fun simpleChildren(): Sequence<SimpleBlock> = children.asSequence()
 }
 
 
 data class Canvas(
     val blockId: Int,
-    val blocks: PersistentMap<BlockId, Block>
+    val blocks: PersistentMap<BlockId, Block>,
+    val width: Int,
+    val height: Int
 ) {
+
+    fun allSimpleBlocks(): Sequence<SimpleBlock> = blocks.values.asSequence().flatMap {
+        when (it) {
+            is SimpleBlock -> sequenceOf(it)
+            is ComplexBlock -> it.simpleChildren()
+        }
+    }
+
     fun apply(move: Move): Canvas = when (move) {
-        is LineCutMove -> TODO()
-        is ColorMove -> TODO()
-        is MergeMove -> TODO()
+        is LineCutMove -> {
+            val block = blocks[move.block]!!
+            when (move.orientation) {
+                Orientation.X -> verticalCut(block, move.offset)
+                Orientation.Y -> horizontalCut(block, move.offset)
+            }
+        }
+
+        is ColorMove -> {
+            val block = blocks[move.block]!!
+            val newBlock = when (block) {
+                is SimpleBlock -> block.copy(color = move.color)
+                is ComplexBlock -> SimpleBlock(block.id, block.shape, move.color)
+            }
+            Canvas(blockId, blocks.put(block.id, newBlock), width, height)
+        }
+
+        is MergeMove -> {
+            val first = blocks[move.first]!!
+            val second = blocks[move.second]!!
+
+            val lowerX = minOf(first.shape.lowerLeft.x, second.shape.lowerLeft.x)
+            val lowerY = minOf(first.shape.lowerLeft.y, second.shape.lowerLeft.y)
+            val upperX = maxOf(first.shape.upperRight.x, second.shape.upperRight.x)
+            val upperY = minOf(first.shape.upperRight.y, second.shape.upperRight.y)
+
+            val children = mutableSetOf<SimpleBlock>()
+            children.addAll(first.simpleChildren())
+            children.addAll(second.simpleChildren())
+
+            val complex = ComplexBlock(
+                SimpleId(blockId + 1),
+                Shape(Point(lowerX, lowerY), Point(upperX, upperY)),
+                children
+            )
+            val newBlocks = blocks.builder()
+            newBlocks.remove(first.id)
+            newBlocks.remove(second.id)
+            newBlocks[complex.id] = complex
+
+            Canvas(
+                blockId + 1,
+                newBlocks.build(), width, height
+            )
+        }
+
         is PointCutMove -> pointCut(move)
         is SwapMove -> swap(move)
+    }
+
+    private fun verticalCut(block: Block, offset: Int): Canvas = when (block) {
+        is SimpleBlock -> {
+            val leftBlock = SimpleBlock(
+                block.id + 0,
+                Shape(block.shape.lowerLeft, Point(offset, block.shape.upperRight.y)),
+                block.color
+            )
+            val rightBlock = SimpleBlock(
+                block.id + 1,
+                Shape(Point(offset, block.shape.lowerLeft.y), block.shape.upperRight),
+                block.color
+            )
+
+            val newBlocks = blocks.builder()
+            newBlocks.remove(block.id)
+            newBlocks[leftBlock.id] = leftBlock
+            newBlocks[rightBlock.id] = rightBlock
+
+            Canvas(blockId, newBlocks.build(), width, height)
+        }
+
+        is ComplexBlock -> {
+            val leftBlocks = mutableSetOf<SimpleBlock>()
+            val rightBlocks = mutableSetOf<SimpleBlock>()
+            for (child in block.children) {
+                when {
+                    child.shape.lowerLeft.x >= offset -> {
+                        rightBlocks += child
+                    }
+
+                    child.shape.upperRight.x <= offset -> {
+                        leftBlocks += child
+                    }
+
+                    else -> {
+                        leftBlocks += SimpleBlock(
+                            child.id + 0,
+                            Shape(child.shape.lowerLeft, Point(offset, child.shape.upperRight.y)),
+                            child.color
+                        )
+                        rightBlocks += SimpleBlock(
+                            child.id + 1,
+                            Shape(Point(offset, child.shape.lowerLeft.y), child.shape.upperRight),
+                            child.color
+                        )
+                    }
+                }
+            }
+            val leftBlock = ComplexBlock(
+                block.id + 0,
+                Shape(block.shape.lowerLeft, Point(offset, block.shape.upperRight.y)),
+                leftBlocks
+            )
+            val rightBlock = ComplexBlock(
+                block.id + 1,
+                Shape(Point(offset, block.shape.lowerLeft.y), block.shape.upperRight),
+                rightBlocks
+            )
+
+            val newBlocks = blocks.builder()
+            newBlocks.remove(block.id)
+            newBlocks[leftBlock.id] = leftBlock
+            newBlocks[rightBlock.id] = rightBlock
+            Canvas(blockId, newBlocks.build(), width, height)
+        }
+    }
+
+
+    private fun horizontalCut(block: Block, offset: Int): Canvas = when (block) {
+        is SimpleBlock -> {
+            val leftBlock = SimpleBlock(
+                block.id + 0,
+                Shape(block.shape.lowerLeft, Point(block.shape.upperRight.x, offset)),
+                block.color
+            )
+            val rightBlock = SimpleBlock(
+                block.id + 1,
+                Shape(Point(block.shape.lowerLeft.x, offset), block.shape.upperRight),
+                block.color
+            )
+
+            val newBlocks = blocks.builder()
+            newBlocks.remove(block.id)
+            newBlocks[leftBlock.id] = leftBlock
+            newBlocks[rightBlock.id] = rightBlock
+
+            Canvas(blockId, newBlocks.build(), width, height)
+        }
+
+        is ComplexBlock -> {
+            val bottomBlocks = mutableSetOf<SimpleBlock>()
+            val topBlocks = mutableSetOf<SimpleBlock>()
+            for (child in block.children) {
+                when {
+                    child.shape.lowerLeft.y >= offset -> {
+                        topBlocks += child
+                    }
+
+                    child.shape.upperRight.y <= offset -> {
+                        bottomBlocks += child
+                    }
+
+                    else -> {
+                        bottomBlocks += SimpleBlock(
+                            child.id + 0,
+                            Shape(child.shape.lowerLeft, Point(child.shape.upperRight.x, offset)),
+                            child.color
+                        )
+                        topBlocks += SimpleBlock(
+                            child.id + 1,
+                            Shape(Point(child.shape.lowerLeft.x, offset), child.shape.upperRight),
+                            child.color
+                        )
+                    }
+                }
+            }
+            val bottomBlock = ComplexBlock(
+                block.id + 0,
+                Shape(block.shape.lowerLeft, Point(block.shape.upperRight.x, offset)),
+                bottomBlocks
+            )
+            val topBlock = ComplexBlock(
+                block.id + 1,
+                Shape(Point(block.shape.lowerLeft.x, offset), block.shape.upperRight),
+                topBlocks
+            )
+
+            val newBlocks = blocks.builder()
+            newBlocks.remove(block.id)
+            newBlocks[bottomBlock.id] = bottomBlock
+            newBlocks[topBlock.id] = topBlock
+            Canvas(blockId, newBlocks.build(), width, height)
+        }
     }
 
     private inline fun pointCutHelper(
@@ -139,7 +328,7 @@ data class Canvas(
             put(topLeftBlock.id, topLeftBlock)
             build()
         }
-        return Canvas(this.blockId, newBlocks)
+        return Canvas(this.blockId, newBlocks, width, height)
     }
 
     private fun pointCut(move: PointCutMove): Canvas {
@@ -366,6 +555,6 @@ data class Canvas(
         val newBlock1 = block1.withId(block2.id)
         val newBlock2 = block2.withId(block1.id)
         val newBlocks = blocks.putAll(mapOf(newBlock1.id to newBlock1, newBlock2.id to newBlock2))
-        return Canvas(blockId, newBlocks)
+        return Canvas(blockId, newBlocks, width, height)
     }
 }
