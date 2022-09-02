@@ -2,7 +2,13 @@ package ru.spbstu.icfpc2022.canvas
 
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentMapOf
-import ru.spbstu.icfpc2022.move.*
+import ru.spbstu.icfpc2022.move.ColorMove
+import ru.spbstu.icfpc2022.move.LineCutMove
+import ru.spbstu.icfpc2022.move.MergeMove
+import ru.spbstu.icfpc2022.move.Move
+import ru.spbstu.icfpc2022.move.Orientation
+import ru.spbstu.icfpc2022.move.PointCutMove
+import ru.spbstu.icfpc2022.move.SwapMove
 import kotlin.math.round
 
 
@@ -11,6 +17,9 @@ data class Point(
     val y: Int
 ) {
     override fun toString(): String = "[$x, $y]"
+
+    fun add(other: Point) = Point(x + other.x, y + other.y)
+    fun subtract(other: Point) = Point(x - other.x, y - other.y)
 
     fun isStrictlyInside(bottomLeft: Point, topRight: Point): Boolean =
         bottomLeft.x < x
@@ -73,7 +82,6 @@ sealed class Block {
     abstract val shape: Shape
 
     abstract fun simpleChildren(): Sequence<SimpleBlock>
-    abstract fun withId(newId: BlockId): Block
 }
 
 data class SimpleBlock(
@@ -81,7 +89,6 @@ data class SimpleBlock(
     override val shape: Shape,
     val color: Color
 ) : Block() {
-    override fun withId(newId: BlockId): Block = SimpleBlock(newId, shape, color)
     override fun simpleChildren(): Sequence<SimpleBlock> = sequenceOf(this)
 }
 
@@ -90,7 +97,6 @@ data class ComplexBlock(
     override val shape: Shape,
     val children: Set<SimpleBlock>
 ) : Block() {
-    override fun withId(newId: BlockId): Block = ComplexBlock(newId, shape, children)
     override fun simpleChildren(): Sequence<SimpleBlock> = children.asSequence()
 }
 
@@ -569,18 +575,59 @@ data class Canvas(
         if (block1.shape.width != block2.shape.width || block1.shape.height != block2.shape.height) {
             error("block shape mismatch: ${block1.shape} : ${block2.shape}")
         }
-        val newBlock1 = block1.withId(block2.id)
-        val newBlock2 = block2.withId(block1.id)
-        val newBlocks = blocks.putAll(mapOf(newBlock1.id to newBlock1, newBlock2.id to newBlock2))
+
+        val newBlock1 = when (block1) {
+            is SimpleBlock -> SimpleBlock(
+                block1.id, block2.shape,
+                block1.color
+            )
+            is ComplexBlock -> ComplexBlock(
+                block1.id, block2.shape,
+                block1.offsetChildren(block2.shape.lowerLeft)
+            )
+        }
+        val newBlock2 = when (block2) {
+            is SimpleBlock -> SimpleBlock(
+                block2.id, block1.shape,
+                block2.color
+            )
+            is ComplexBlock -> ComplexBlock(
+                block2.id, block1.shape,
+                block2.offsetChildren(block1.shape.lowerLeft)
+            )
+        }
+        val newBlocks = with(blocks.builder()) {
+            put(newBlock1.id, newBlock1)
+            put(newBlock2.id, newBlock2)
+            build()
+        }
         return Canvas(blockId, newBlocks, width, height)
     }
+
+    private fun ComplexBlock.offsetChildren(newLowerLeft: Point) =
+        children.mapIndexed { i, block ->
+            SimpleBlock(
+                ComplexId(id, i),
+                Shape(
+                    block.shape.lowerLeft.add(newLowerLeft).subtract(shape.lowerLeft),
+                    block.shape.upperRight.add(newLowerLeft).subtract(shape.lowerLeft)
+                ),
+                block.color
+            )
+        }.toSet()
 
     companion object {
         fun empty(width: Int, height: Int): Canvas {
             val mainBlockId = SimpleId(0)
             return Canvas(
                 0,
-                persistentMapOf(mainBlockId to SimpleBlock(mainBlockId, Shape(Point(0, 0), Point(width - 1, height - 1)), Color(255, 255, 255, 255))),
+                persistentMapOf(
+                    mainBlockId to SimpleBlock(
+                        mainBlockId,
+                        Shape(Point(0, 0), Point(width - 1, height - 1)),
+                        Color(255, 255, 255, 255)
+                    )
+                ),
                 width, height
             )
         }
