@@ -20,3 +20,10 @@ class PersistentState(
 
     fun dumpSolution(): String = commands.joinToString("\n")
 }
+
+
+abstract class Solver(
+    val task: ImmutableImage
+) {
+    abstract fun solve(): List<Move>
+}

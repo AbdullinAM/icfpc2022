@@ -1,6 +1,7 @@
 package ru.spbstu.icfpc2022.canvas
 
 import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.persistentMapOf
 import ru.spbstu.icfpc2022.move.*
 import kotlin.math.round
 
@@ -28,10 +29,10 @@ data class Point(
 }
 
 data class Color(
-    val r: Byte,
-    val g: Byte,
-    val b: Byte,
-    val a: Byte
+    val r: Int,
+    val g: Int,
+    val b: Int,
+    val a: Int
 ) {
     override fun toString(): String = "[$r, $g, $b, $a]"
 }
@@ -47,6 +48,8 @@ data class Shape(
     val height: Int get() = upperRight.y - lowerLeft.y
 
     val size: Long get() = width.toLong() * height.toLong()
+
+    val middle: Point = Point(lowerLeft.x + width / 2, lowerLeft.y + height / 2)
 }
 
 sealed class BlockId {
@@ -98,6 +101,20 @@ data class Canvas(
     val width: Int,
     val height: Int
 ) {
+
+    constructor(width: Int, height: Int) : this(
+        0,
+        persistentMapOf(
+            SimpleId(0) to SimpleBlock(
+                SimpleId(0),
+                Shape(Point(0, 0), Point(width, height)),
+                Color(255, 255, 255, 255)
+            )
+        ),
+        width,
+        height
+    )
+
     val size: Long get() = width.toLong() * height.toLong()
 
     fun allSimpleBlocks(): Sequence<SimpleBlock> = blocks.values.asSequence().flatMap {
@@ -112,7 +129,7 @@ data class Canvas(
     fun costOf(move: Move): Long = when (move) {
         is ColorMove -> cost(move.cost, blocks[move.block]!!.shape.size)
         is LineCutMove -> cost(move.cost, blocks[move.block]!!.shape.size)
-        is MergeMove ->  cost(move.cost, maxOf(blocks[move.first]!!.shape.size, blocks[move.second]!!.shape.size))
+        is MergeMove -> cost(move.cost, maxOf(blocks[move.first]!!.shape.size, blocks[move.second]!!.shape.size))
         is PointCutMove -> cost(move.cost, blocks[move.block]!!.shape.size)
         is SwapMove -> cost(move.cost, maxOf(blocks[move.first]!!.shape.size, blocks[move.second]!!.shape.size))
     }
