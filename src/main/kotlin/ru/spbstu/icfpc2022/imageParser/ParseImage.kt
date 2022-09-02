@@ -5,6 +5,7 @@ import com.sksamuel.scrimage.pixels.Pixel
 import ru.spbstu.icfpc2022.canvas.Canvas
 import ru.spbstu.icfpc2022.canvas.Color
 import ru.spbstu.icfpc2022.canvas.Shape
+import ru.spbstu.icfpc2022.canvas.Point
 import ru.spbstu.ktuples.zip
 import java.io.File
 import java.net.URL
@@ -13,10 +14,13 @@ import kotlin.math.sqrt
 fun parseImage(path: String) = ImmutableImage.loader().fromFile(File(path)).flipY()
 fun parseImage(url: URL) = ImmutableImage.loader().fromStream(url.openStream()).flipY()
 
-
 fun Pixel.getCanvasColor() = Color(red(), green(), blue(), alpha())
 
 operator fun ImmutableImage.get(x: Int, y: Int): Pixel = this.pixel(x, y)
+fun ImmutableImage.getOrNull(x: Int, y: Int): Pixel? = when {
+    x >= width || y >= height || x < 0 || y < 0 -> null
+    else -> pixel(x, y)
+}
 
 fun ImmutableImage.subimage(shape: Shape): ImmutableImage = subimage(shape.lowerLeft.x, shape.lowerLeft.y, shape.width, shape.height)
 
