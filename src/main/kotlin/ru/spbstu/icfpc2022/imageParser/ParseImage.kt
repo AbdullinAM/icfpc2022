@@ -12,7 +12,7 @@ import kotlin.math.sqrt
 fun parseImage(path: String) = ImmutableImage.loader().fromFile(File(path))
 fun parseImage(url: URL) = ImmutableImage.loader().fromStream(url.openStream())
 
-operator fun ImmutableImage.get(x: Int, y: Int): Pixel = this.pixel(x, y)
+operator fun ImmutableImage.get(x: Int, y: Int): Pixel = this.pixel(x, this.height - 1 - y)
 
 fun Color.toAwt() = java.awt.Color(r.toInt(), g.toInt(), b.toInt(), a.toInt())
 

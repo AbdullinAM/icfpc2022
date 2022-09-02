@@ -6,6 +6,10 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import ru.spbstu.icfpc2022.algo.DummyBlockAverager
+import ru.spbstu.icfpc2022.algo.Task
+import ru.spbstu.icfpc2022.imageParser.parseImage
+import java.net.URL
 import kotlin.io.path.Path
 import kotlin.io.path.outputStream
 
@@ -82,7 +86,13 @@ fun submit(problemId: Int, code: String) {
 }
 
 fun main() {
-//    val problems = getProblems()
-//    downloadProblems(problems)
-//    submit(1, "\ncut [0] [y] [280]\n")
+    val problems = getProblems()
+    for (problem in problems.problems) {
+        val im = parseImage(URL(problem.target_link))
+
+        val task = Task(problem.id, im)
+        val solver = DummyBlockAverager(task, 2000)
+        val solution = solver.solve()
+        submit(problem.id, solution.joinToString("\n"))
+    }
 }
