@@ -50,26 +50,41 @@ data class ComplexId(
 sealed class Block {
     abstract val id: BlockId
     abstract val shape: Shape
+
+    abstract fun simpleChildren(): Sequence<SimpleBlock>
 }
 
 data class SimpleBlock(
     override val id: BlockId,
     override val shape: Shape,
     val color: Color
-) : Block()
+) : Block() {
+    override fun simpleChildren(): Sequence<SimpleBlock> = sequenceOf(this)
+}
 
 data class ComplexBlock(
     override val id: BlockId,
     override val shape: Shape,
     val children: Set<SimpleBlock>
-) : Block()
+) : Block() {
+    override fun simpleChildren(): Sequence<SimpleBlock> = children.asSequence()
+}
 
 
 data class Canvas(
     val blockId: Int,
-    val shape: Shape,
-    val blocks: PersistentMap<BlockId, Block>
+    val blocks: PersistentMap<BlockId, Block>,
+    val width: Int,
+    val height: Int
 ) {
+
+    fun allSimpleBlocks(): Sequence<SimpleBlock> = blocks.values.asSequence().flatMap {
+        when (it) {
+            is SimpleBlock -> sequenceOf(it)
+            is ComplexBlock -> it.simpleChildren()
+        }
+    }
+
     fun apply(move: Move): Canvas = when (move) {
         is LineCutMove -> {
             val block = blocks[move.block]!!
@@ -85,7 +100,7 @@ data class Canvas(
                 is SimpleBlock -> block.copy(color = move.color)
                 is ComplexBlock -> SimpleBlock(block.id, block.shape, move.color)
             }
-            Canvas(blockId, shape, blocks.put(block.id, newBlock))
+            Canvas(blockId, blocks.put(block.id, newBlock), width, height)
         }
 
         is MergeMove -> {
@@ -119,8 +134,7 @@ data class Canvas(
 
             Canvas(
                 blockId + 1,
-                shape,
-                newBlocks.build()
+                newBlocks.build(), width, height
             )
         }
 
@@ -146,7 +160,7 @@ data class Canvas(
             newBlocks[leftBlock.id] = leftBlock
             newBlocks[rightBlock.id] = rightBlock
 
-            Canvas(blockId, shape, newBlocks.build())
+            Canvas(blockId, newBlocks.build(), width, height)
         }
 
         is ComplexBlock -> {
@@ -191,7 +205,7 @@ data class Canvas(
             newBlocks.remove(block.id)
             newBlocks[leftBlock.id] = leftBlock
             newBlocks[rightBlock.id] = rightBlock
-            Canvas(blockId, shape, newBlocks.build())
+            Canvas(blockId, newBlocks.build(), width, height)
         }
     }
 
@@ -214,7 +228,7 @@ data class Canvas(
             newBlocks[leftBlock.id] = leftBlock
             newBlocks[rightBlock.id] = rightBlock
 
-            Canvas(blockId, shape, newBlocks.build())
+            Canvas(blockId, newBlocks.build(), width, height)
         }
 
         is ComplexBlock -> {
@@ -259,7 +273,7 @@ data class Canvas(
             newBlocks.remove(block.id)
             newBlocks[bottomBlock.id] = bottomBlock
             newBlocks[topBlock.id] = topBlock
-            Canvas(blockId, shape, newBlocks.build())
+            Canvas(blockId, newBlocks.build(), width, height)
         }
     }
 }
