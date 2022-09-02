@@ -27,13 +27,16 @@ data class Task(
     }
 
     fun closestSnap(point: Point, inShape: Shape): Point? {
-        val xh = snapPoints.ceilingEntry(point.x)
-        val xl = snapPoints.floorEntry(point.x)
+        val submap = snapPoints.subMap(inShape.lowerLeft.x, false, inShape.upperRight.x, false)
+        val xh = submap.ceilingEntry(point.x)
+        val xl = submap.floorEntry(point.x)
 
-        val cand1 = xh?.value?.ceilingEntry(point.y)?.value
-        val cand2 = xh?.value?.floorEntry(point.y)?.value
-        val cand3 = xl?.value?.ceilingEntry(point.y)?.value
-        val cand4 = xl?.value?.floorEntry(point.y)?.value
+        val xhsub = xh?.value?.subMap(inShape.lowerLeft.y, false, inShape.upperRight.y, false)
+        val cand1 = xhsub?.ceilingEntry(point.y)?.value
+        val cand2 = xhsub?.floorEntry(point.y)?.value
+        val xlsub = xl?.value?.subMap(inShape.lowerLeft.y, false, inShape.upperRight.y, false)
+        val cand3 = xlsub?.ceilingEntry(point.y)?.value
+        val cand4 = xlsub?.floorEntry(point.y)?.value
 
         return setOfNotNull(cand1, cand2, cand3, cand4)
             .filter { it.isStrictlyInside(inShape.lowerLeft, inShape.upperRight) }.minByOrNull { point.distance(it) }
