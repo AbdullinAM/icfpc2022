@@ -1,6 +1,7 @@
 package ru.spbstu.icfpc2022.canvas
 
 import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.persistentMapOf
 import ru.spbstu.icfpc2022.move.*
 
 
@@ -556,5 +557,16 @@ data class Canvas(
         val newBlock2 = block2.withId(block1.id)
         val newBlocks = blocks.putAll(mapOf(newBlock1.id to newBlock1, newBlock2.id to newBlock2))
         return Canvas(blockId, newBlocks, width, height)
+    }
+
+    companion object {
+        fun empty(width: Int, height: Int): Canvas {
+            val mainBlockId = SimpleId(0)
+            return Canvas(
+                0,
+                persistentMapOf(mainBlockId to SimpleBlock(mainBlockId, Shape(Point(0, 0), Point(width - 1, height - 1)), Color(255.toByte(),255.toByte(),255.toByte(),255.toByte()))),
+                width, height
+            )
+        }
     }
 }
