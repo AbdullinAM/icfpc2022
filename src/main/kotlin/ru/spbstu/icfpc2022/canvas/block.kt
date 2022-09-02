@@ -81,6 +81,10 @@ sealed class Block {
     abstract val id: BlockId
     abstract val shape: Shape
 
+    init {
+        check(shape.size > 0L) { "empty blocks are prohibited" }
+    }
+
     abstract fun simpleChildren(): Sequence<SimpleBlock>
 }
 
