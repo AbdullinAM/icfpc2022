@@ -4,6 +4,7 @@ import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.pixels.Pixel
 import ru.spbstu.icfpc2022.canvas.Canvas
 import ru.spbstu.icfpc2022.canvas.Color
+import ru.spbstu.icfpc2022.canvas.Shape
 import ru.spbstu.ktuples.zip
 import java.io.File
 import java.net.URL
@@ -18,6 +19,8 @@ fun parseImage(url: URL) = ImmutableImage.loader().fromStream(url.openStream()).
 fun Pixel.getCanvasColor() = Color(red(), green(), blue(), alpha())
 
 operator fun ImmutableImage.get(x: Int, y: Int): Pixel = this.pixel(x, y)
+
+fun ImmutableImage.subimage(shape: Shape): ImmutableImage = subimage(shape.lowerLeft.x, shape.lowerLeft.y, shape.width, shape.height)
 
 fun Color.toAwt() = java.awt.Color(r.toInt(), g.toInt(), b.toInt(), a.toInt())
 
