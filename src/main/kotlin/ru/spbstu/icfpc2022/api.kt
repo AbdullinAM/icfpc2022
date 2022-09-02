@@ -88,6 +88,7 @@ fun submit(problemId: Int, code: String) {
 
 fun main() = try {
     val problems = getProblems()
+    downloadProblems(problems)
     for (problem in problems.problems) {
         val im = parseImage(URL(problem.target_link))
 
