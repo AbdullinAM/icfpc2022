@@ -2,10 +2,7 @@ package ru.spbstu.icfpc2022.algo.tactics
 
 import ru.spbstu.icfpc2022.algo.PersistentState
 import ru.spbstu.icfpc2022.algo.Task
-import ru.spbstu.icfpc2022.canvas.BlockId
-import ru.spbstu.icfpc2022.canvas.Color
-import ru.spbstu.icfpc2022.canvas.Shape
-import ru.spbstu.icfpc2022.canvas.SimpleId
+import ru.spbstu.icfpc2022.canvas.*
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.move.ColorMove
 
@@ -64,6 +61,7 @@ class ColorAverageTactic(task: Task, tacticStorage: TacticStorage): BlockTactic(
         val block = state.canvas.blocks[blockId]!!
         val avg = computeBlockAverage2(block.shape)
         if (avg == backgroundColor) return state
+        if (block is SimpleBlock && block.color == avg) return state
         resultingColor = avg
 
         val colorMove = ColorMove(blockId, avg)

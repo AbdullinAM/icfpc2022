@@ -5,6 +5,10 @@ import com.sksamuel.scrimage.color.RGBColor
 import com.sksamuel.scrimage.nio.PngWriter
 import com.sksamuel.scrimage.pixels.Pixel
 import com.sksamuel.scrimage.pixels.PixelsExtractor
+import ru.spbstu.icfpc2022.algo.tactics.ColorAverageTactic
+import ru.spbstu.icfpc2022.algo.tactics.DummyCutter
+import ru.spbstu.icfpc2022.algo.tactics.DumpSolutions
+import ru.spbstu.icfpc2022.algo.tactics.TacticStorage
 import ru.spbstu.icfpc2022.canvas.*
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.getCanvasColor
@@ -284,10 +288,17 @@ class AutocropDummy(task: Task) : Solver(task) {
             )
         }
 
-        File("solutions/").mkdirs()
-        val xyu = state.state.move(ColorMove(state.block, Color(100, 100, 100, 0)))
-        xyu.canvas.toImage().forWriter(PngWriter(0)).write(File("solutions/${task.problemId}.png"))
-        println(xyu.score)
-        return emptyList()
+        val storage = TacticStorage()
+        val dummyCutter = DummyCutter(
+            task,
+            storage,
+            2000
+        )
+        var newState = dummyCutter.invoke(state.state)
+
+        newState = ColorAverageTactic(task, storage)(newState)
+        val dumper = DumpSolutions(task, storage)
+        dumper(newState)
+        return newState.commands
     }
 }

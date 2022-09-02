@@ -8,7 +8,11 @@ import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.getCanvasColor
 import ru.spbstu.icfpc2022.move.PointCutMove
 
-class DummyCutter(task: Task, tacticStorage: TacticStorage, val limit: Long): Tactic(task, tacticStorage) {
+class DummyCutter(
+    task: Task,
+    tacticStorage: TacticStorage,
+    val limit: Long
+) : BlockTactic(task, tacticStorage) {
     private fun allOneColour(shape: Shape): Boolean {
         val color = task.targetImage[shape.lowerLeft.x, shape.lowerLeft.y].getCanvasColor()
         for (x in shape.lowerLeft.x..shape.upperRight.x) {
@@ -20,10 +24,10 @@ class DummyCutter(task: Task, tacticStorage: TacticStorage, val limit: Long): Ta
         return true
     }
 
-    override fun invoke(state: PersistentState): PersistentState {
+    override fun invoke(state: PersistentState, blockId: BlockId): PersistentState {
         var state = state
         val queue = ArrayDeque<BlockId>()
-        queue.addAll(state.canvas.allSimpleBlocks().map { it.id })
+        queue.add(blockId)
         while (queue.isNotEmpty()) {
             val current = queue.removeFirst()
 

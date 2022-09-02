@@ -92,11 +92,9 @@ fun main() = try {
         val im = parseImage(URL(problem.target_link))
 
         val task = Task(problem.id, im)
-//        val solver = DummyBlockAverager(task, 1000)
-//        val solution = solver.solve()
-//        submit(problem.id, solution.joinToString("\n"))
         val autocropDummy = AutocropDummy(task)
-        autocropDummy.solve()
+        val solution = autocropDummy.solve()
+        submit(problem.id, solution.joinToString("\n"))
     }
 } finally {
     client.connectionPool.evictAll()
