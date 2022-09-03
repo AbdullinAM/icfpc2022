@@ -7,7 +7,7 @@ import ru.spbstu.icfpc2022.canvas.Point
 import ru.spbstu.icfpc2022.move.*
 import ru.spbstu.icfpc2022.submit
 
-class StupidFuzzer(task: Task) : Solver(task) {
+class StupidFuzzer(task: Task, val maxAttempts: Long = 10000L) : Solver(task) {
 
     override fun solve(): PersistentState {
         val initState = PersistentState(
@@ -21,7 +21,10 @@ class StupidFuzzer(task: Task) : Solver(task) {
         val coloredBlocks = mutableSetOf<BlockId>()
 
 
+        var attemtps = 0L
         while (queue.isNotEmpty()) {
+            attemtps++
+            if (attemtps > maxAttempts) break
             val currentState = queue.removeFirst()
 
             val move: Move = when ((1..4).random()) {

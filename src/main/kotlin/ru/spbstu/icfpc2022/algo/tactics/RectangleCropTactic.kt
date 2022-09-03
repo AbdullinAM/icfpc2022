@@ -84,7 +84,10 @@ class RectangleCropTactic(
             }
             if (!succeded) break
         }
-        val cropShape = Shape(cropBase, cropPoint)
+        val cropShape = Shape(
+            Point(cropBase.x, cropPoint.y),
+            Point(cropPoint.x, cropBase.y)
+        )
         return when {
             cropShape.size < limit -> null
             else -> Triple(cropPoint, cropBase, cropShape)
@@ -114,7 +117,7 @@ class RectangleCropTactic(
             }
             if (!succeded) break
         }
-        val cropShape = Shape(cropBase, cropPoint)
+        val cropShape = Shape(cropPoint, cropBase)
         return when {
             cropShape.size < limit -> null
             else -> Triple(cropPoint, cropBase, cropShape)
@@ -144,7 +147,10 @@ class RectangleCropTactic(
             }
             if (!succeded) break
         }
-        val cropShape = Shape(cropBase, cropPoint)
+        val cropShape = Shape(
+            Point(cropPoint.x, cropBase.y),
+            Point(cropBase.x, cropPoint.y)
+        )
         return when {
             cropShape.size < limit -> null
             else -> Triple(cropPoint, cropBase, cropShape)

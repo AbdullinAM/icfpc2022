@@ -3,7 +3,6 @@ package ru.spbstu.icfpc2022.algo
 import ru.spbstu.icfpc2022.algo.tactics.*
 import ru.spbstu.icfpc2022.canvas.Canvas
 import ru.spbstu.icfpc2022.canvas.SimpleId
-import ru.spbstu.icfpc2022.move.Move
 
 class RectangleCropDummy(
     task: Task,
