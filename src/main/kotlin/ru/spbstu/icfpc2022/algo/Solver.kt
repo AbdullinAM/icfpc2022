@@ -9,6 +9,7 @@ import ru.spbstu.icfpc2022.canvas.Point
 import ru.spbstu.icfpc2022.canvas.Shape
 import ru.spbstu.icfpc2022.canvas.SimpleBlock
 import ru.spbstu.icfpc2022.imageParser.*
+import ru.spbstu.icfpc2022.move.MergeMove
 import ru.spbstu.icfpc2022.move.Move
 import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import java.util.TreeMap
@@ -18,7 +19,7 @@ data class Task(
     val problemId: Int,
     val targetImage: ImmutableImage
 ) {
-    constructor(problemId: Int): this(problemId, parseImage("problems/$problemId.png"))
+    constructor(problemId: Int) : this(problemId, parseImage("problems/$problemId.png"))
 
     val snapPoints = TreeMap<Int, TreeMap<Int, Point>>()
 
@@ -66,8 +67,9 @@ class PersistentState(
 
     fun move(move: Move): PersistentState {
         val newCost = cost + canvas.costOf(move)
-        StateCollector.commandToCanvas.add(move to canvas.allSimpleBlocks().toList())
-        return PersistentState(task, canvas.apply(move), commands.add(move), newCost)
+        val newCanvas = canvas.apply(move)
+        return PersistentState(task, newCanvas, commands.add(move), newCost)
+            .also { StateCollector.commandToCanvas.add(move to newCanvas.allSimpleBlocks().toList()) }
     }
 
     fun dumpSolution(): String = commands.joinToString("\n")
@@ -78,7 +80,6 @@ fun PersistentState(problemId: Int): PersistentState {
     val canvas = Canvas.empty(task.targetImage.width, task.targetImage.height)
     return PersistentState(task, canvas)
 }
-
 
 
 abstract class Solver(
