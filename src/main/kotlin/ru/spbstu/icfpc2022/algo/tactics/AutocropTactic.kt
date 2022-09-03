@@ -59,12 +59,12 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                 (refColor.blue + tolerance).coerceAtMost(255),
                 (refColor.alpha + tolerance).coerceAtMost(255),
             )
-            return pixels.all { p: Pixel ->
+            return pixels.count { p: Pixel ->
                 p.red() in minColor.red..maxColor.red &&
                         p.green() in minColor.green..maxColor.green &&
                         p.blue() in minColor.blue..maxColor.blue &&
                         p.alpha() in minColor.alpha..maxColor.alpha
-            }
+            } > (pixels.size * 0.8).toLong()
         }
 
         /**
@@ -261,13 +261,14 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
 
             val bestCrop = autocrops.minBy { it.second.size }
 
-            val colorMove = ColorMove(autocropState.block, bestCrop.first)
-            var newState = autocropState.state.move(colorMove)
-
             val newBlockShape = Shape(
                 bestCrop.second.lowerLeft.add(shape.lowerLeft),
                 bestCrop.second.upperRight.add(shape.lowerLeft),
             )
+
+            val bestCropAverage = computeNotBlockAverage(autocropState.image, newBlockShape)
+            val colorMove = ColorMove(autocropState.block, bestCropAverage)
+            var newState = autocropState.state.move(colorMove)
 
             var nextBlock = autocropState.block
 

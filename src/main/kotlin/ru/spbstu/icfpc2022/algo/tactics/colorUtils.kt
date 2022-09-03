@@ -26,6 +26,27 @@ fun computeBlockAverage(image: ImmutableImage, shape: Shape): Color {
     return Color((r / count).toInt(), (g / count).toInt(), (b / count).toInt(), (a / count).toInt())
 }
 
+fun computeNotBlockAverage(image: ImmutableImage, shape: Shape): Color {
+    var r = 0L
+    var g = 0L
+    var b = 0L
+    var a = 0L
+    var count = 0
+    for (x in 0 until image.width) {
+        for (y in 0 until image.height) {
+            if (!Point(x, y).isStrictlyInside(shape.lowerLeft, shape.upperRight)) {
+                val pixel = image[x, y]
+                r += pixel.red()
+                g += pixel.green()
+                b += pixel.blue()
+                a += pixel.alpha()
+                count++
+            }
+        }
+    }
+    return Color((r / count).toInt(), (g / count).toInt(), (b / count).toInt(), (a / count).toInt())
+}
+
 fun computeBlockMedian(image: ImmutableImage, shape: Shape): Color {
     val red = IntArray(256)
     val green = IntArray(256)
