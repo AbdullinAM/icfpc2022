@@ -7,7 +7,7 @@ import ru.spbstu.icfpc2022.move.Move
 
 class RectangleCropDummy(
     task: Task,
-    val colorTolerance: Int = 27,
+    val colorTolerance: Int = 17,
     val limit: Long = 5000L
 ) : Solver(task) {
     override fun solve(): List<Move> {
