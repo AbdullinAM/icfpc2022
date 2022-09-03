@@ -236,7 +236,7 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
         var autocropState = AutocropState(
             state,
             task.targetImage.subimage(cropBlock.shape),
-            SimpleId(0)
+            blockId
         )
 
         while (true) {
