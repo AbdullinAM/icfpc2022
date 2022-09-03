@@ -256,7 +256,7 @@ class AutocropTactic(
             return when {
                 x1 == 0 && y1 == 0 && x2 == image.width - 1 && y2 == image.height - 1 -> null to image
                 x2 <= x1 || y2 <= y1 -> null to image
-                else -> Shape(Point(x1, y1), Point(x2, y2)) to image.subimage(
+                else -> Shape(Point(x1, y1), Point(x2 + 1, y2 + 1)) to image.subimage(
                     x1,
                     y1,
                     x2 - x1,
