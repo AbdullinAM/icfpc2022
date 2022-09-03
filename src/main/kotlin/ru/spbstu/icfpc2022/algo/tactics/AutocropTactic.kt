@@ -224,18 +224,6 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
             }
         }
 
-        private fun computeMaxColor(image: ImmutableImage, start: Point, end: Point): Color {
-            val colors = mutableMapOf<Color, Int>()
-            for (x in start.x until end.x) {
-                for (y in start.y until end.y) {
-                    val pixel = image[x, y]
-                    val col = pixel.getCanvasColor()
-                    colors[col] = colors.getOrDefault(col, 0) + 1
-                }
-            }
-            return colors.maxBy { it.value }.key
-        }
-
         data class AutocropState(
             val state: PersistentState,
             val image: ImmutableImage,
@@ -263,7 +251,7 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
             )
 
             val colors = variants.map {
-                computeMaxColor(autocropState.image, it.first, it.second)
+                computeBlockMax(autocropState.image, it.first, it.second)
             }
             val autocrops = colors.map { it to autocrop(autocropState.image, it, tolerance) }
                 .filter { it.second.first != null }

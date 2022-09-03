@@ -12,25 +12,6 @@ class ColorAverageTactic(task: Task, tacticStorage: TacticStorage): BlockTactic(
     val backgroundColor: Color?
         get() = backgroundTactic?.resultingColor
 
-    private fun computeBlockAverage(shape: Shape): Color {
-        var r = 0L
-        var g = 0L
-        var b = 0L
-        var a = 0L
-        var count = 0
-        for (x in shape.lowerLeft.x..shape.upperRight.x) {
-            for (y in shape.lowerLeft.y..shape.upperRight.y) {
-                val pixel = task.targetImage[x, y]
-                r += pixel.red()
-                g += pixel.green()
-                b += pixel.blue()
-                a += pixel.alpha()
-                count++
-            }
-        }
-        return Color((r / count).toInt(), (g / count).toInt(), (b / count).toInt(), (a / count).toInt())
-    }
-
 
     var resultingColor: Color? = null
         private set;
@@ -38,7 +19,7 @@ class ColorAverageTactic(task: Task, tacticStorage: TacticStorage): BlockTactic(
     override operator fun invoke(state: PersistentState, blockId: BlockId): PersistentState {
         var state = state
         val block = state.canvas.blocks[blockId]!!
-        val avg = computeBlockAverage2(block.shape)
+        val avg = computeBlockMedian(state.task.targetImage, block.shape)
         if (avg == backgroundColor) return state
         if (block is SimpleBlock && block.color == avg) return state
         resultingColor = avg

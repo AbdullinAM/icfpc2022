@@ -15,7 +15,7 @@ class MergerTactic(task: Task, storage: TacticStorage) : Tactic(task, storage) {
     fun adjacent(shape1: Shape, shape2: Shape) = shape1.boundPoints().intersect(shape2.boundPoints()).size == 2
 
     override fun invoke(state: PersistentState): PersistentState {
-        val calcColors = state.canvas.blocks.values.groupBy { computeBlockAverage2(it.shape) }
+        val calcColors = state.canvas.blocks.values.groupBy { computeBlockMedian(state.task.targetImage, it.shape) }
         for ((_, blocks) in calcColors) {
             for (block1 in blocks) {
                 for (block2 in blocks) if (block1 !== block2) {
