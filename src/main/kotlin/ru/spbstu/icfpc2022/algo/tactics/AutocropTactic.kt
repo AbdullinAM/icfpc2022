@@ -6,11 +6,7 @@ import com.sksamuel.scrimage.pixels.Pixel
 import com.sksamuel.scrimage.pixels.PixelsExtractor
 import ru.spbstu.icfpc2022.algo.PersistentState
 import ru.spbstu.icfpc2022.algo.Task
-import ru.spbstu.icfpc2022.canvas.BlockId
-import ru.spbstu.icfpc2022.canvas.Color
-import ru.spbstu.icfpc2022.canvas.Point
-import ru.spbstu.icfpc2022.canvas.Shape
-import ru.spbstu.icfpc2022.canvas.SimpleId
+import ru.spbstu.icfpc2022.canvas.*
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.subimage
 import ru.spbstu.icfpc2022.imageParser.toAwt
@@ -247,7 +243,7 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                     pixelTolerance
                 )
             return when {
-                x1 == 0 && y1 == 0 && x2 == image.width && y2 == image.height -> null to image
+                x1 == 0 && y1 == 0 && x2 == image.width - 1 && y2 == image.height - 1 -> null to image
                 x2 <= x1 || y2 <= y1 -> null to image
                 else -> Shape(Point(x1, y1), Point(x2, y2)) to image.subimage(
                     x1,
@@ -270,7 +266,7 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
         var autocropState = AutocropState(
             state,
             task.targetImage.subimage(cropBlock.shape),
-            SimpleId(0)
+            blockId
         )
 
         while (true) {
@@ -278,10 +274,10 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
             val tolerance = colorTolerance
             val shape = autocropState.state.canvas.blocks[autocropState.block]!!.shape
             val variants = mutableListOf(
-                Point(0, 0) to Point(shape.width, width.coerceAtMost(shape.height)),
-                Point(0, 0) to Point(width.coerceAtMost(shape.width), shape.height),
-                Point(0, (shape.height - width).coerceAtLeast(0)) to Point(shape.width, shape.height),
-                Point((shape.width - width).coerceAtLeast(0), 0) to Point(shape.width, shape.height),
+                Point(0, 0) to Point(shape.width, width),
+                Point(0, 0) to Point(width, shape.height),
+                Point(0, shape.height - width) to Point(shape.width, shape.height),
+                Point(shape.width - width, 0) to Point(shape.width, shape.height),
             )
 
             val colors = variants.map {
@@ -291,17 +287,18 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                 .filter { it.second.first != null }
                 .map { Triple(it.first, it.second.first!!, it.second.second) }
 
-            val bestCrop = autocrops.minByOrNull { it.second.size }
+            if (autocrops.isEmpty()) break
 
-            if (bestCrop == null) break
-
-            val colorMove = ColorMove(autocropState.block, bestCrop.first)
-            var newState = autocropState.state.move(colorMove)
+            val bestCrop = autocrops.minBy { it.second.size }
 
             val newBlockShape = Shape(
                 bestCrop.second.lowerLeft.add(shape.lowerLeft),
                 bestCrop.second.upperRight.add(shape.lowerLeft),
             )
+
+            val bestCropAverage = computeNotBlockAverage(autocropState.image, newBlockShape)
+            val colorMove = ColorMove(autocropState.block, bestCropAverage)
+            var newState = autocropState.state.move(colorMove)
 
             var nextBlock = autocropState.block
 

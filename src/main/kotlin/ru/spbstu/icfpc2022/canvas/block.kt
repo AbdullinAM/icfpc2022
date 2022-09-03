@@ -23,6 +23,10 @@ data class Point(
     fun subtract(other: Point) = Point(x - other.x, y - other.y)
     fun distance(other: Point) = sqrt((x.toDouble() - other.x).let { it * it } + (y.toDouble() - other.y).let { it * it })
 
+
+    operator fun plus(other: Point) = this.add(other)
+    operator fun minus(other: Point) = this.subtract(other)
+
     fun isStrictlyInside(bottomLeft: Point, topRight: Point): Boolean =
         bottomLeft.x < x
                 && x < topRight.x
