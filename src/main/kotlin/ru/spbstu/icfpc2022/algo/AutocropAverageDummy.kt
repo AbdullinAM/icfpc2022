@@ -10,7 +10,13 @@ import ru.spbstu.icfpc2022.move.Move
 
 class AutocropAverageDummy(
     task: Task,
-    val colorTolerance: Int = 27
+    val colorTolerance: Int,
+    val defaultPixelTolerance: Double,
+    val defaultWidth: Int,
+    val limit: Long,
+    val lowerLimitCoeff1: Double,
+    val lowerLimitCoeff2: Double,
+    val maxSampleSize: Int
 ) : Solver(task) {
     override fun solve(): PersistentState {
         val rootState = PersistentState(
@@ -19,7 +25,17 @@ class AutocropAverageDummy(
         )
 
         val storage = TacticStorage()
-        val cropTactic = AutocropTactic2(task, storage, colorTolerance)
+        val cropTactic = AutocropTactic2(
+            task,
+            storage,
+            colorTolerance,
+            defaultPixelTolerance,
+            defaultWidth,
+            limit,
+            lowerLimitCoeff1,
+            lowerLimitCoeff2,
+            maxSampleSize
+        )
         cropTactic(rootState, SimpleId(0))
         var bestState = rootState
         for ((uncoloredBlock, startState) in cropTactic.finalStates + listOf(SimpleId(0) to rootState)) {

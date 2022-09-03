@@ -8,6 +8,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import ru.spbstu.icfpc2022.algo.*
+import ru.spbstu.icfpc2022.algo.tactics.DumpSolutions
+import ru.spbstu.icfpc2022.algo.tactics.TacticStorage
 import ru.spbstu.icfpc2022.canvas.Color
 import ru.spbstu.icfpc2022.canvas.Point
 import ru.spbstu.icfpc2022.canvas.Shape
@@ -168,6 +170,8 @@ fun main() = try {
         val task = Task(problem.id, im, problem.initialConfig, bestScore = bestScore)
         val rectangleCropDummy = RectangleCropDummy(task)
         val solution = rectangleCropDummy.solve()
+        val dumper = DumpSolutions(task, TacticStorage())
+        dumper(solution)
         if (solution.score < (bestScore ?: Long.MAX_VALUE)) {
             submit(problem.id, solution.commands.joinToString("\n"))
         }

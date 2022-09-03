@@ -17,11 +17,17 @@ import ru.spbstu.icfpc2022.move.Orientation
 import ru.spbstu.icfpc2022.move.PointCutMove
 import kotlin.random.Random
 
-class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorTolerance: Int) :
-    BlockTactic(task, tacticStorage) {
-
-    val defaultPixelTolerance = 0.95
-    val defaultWidth = 10
+class AutocropTactic2(
+    task: Task,
+    tacticStorage: TacticStorage,
+    val colorTolerance: Int,
+    val defaultPixelTolerance: Double,
+    val defaultWidth: Int,
+    val limit: Long,
+    val lowerLimitCoeff1: Double,
+    val lowerLimitCoeff2: Double,
+    val maxSampleSize: Int
+) : BlockTactic(task, tacticStorage) {
 
     lateinit var finalStates: List<Pair<BlockId, PersistentState>>
 
@@ -50,7 +56,7 @@ class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorToleran
                 continue
             }
             val shape = autocropState.state.canvas.blocks[autocropState.block]!!.shape
-            if (shape.size < 40 * 40) {
+            if (shape.size < limit) {
                 resultStates.add(autocropState)
                 continue
             }
@@ -61,11 +67,11 @@ class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorToleran
 
 //            val sizeLimit = task.targetImage.width * task.targetImage.height * 0.07
             val sizeLimit = minOf(
-                shape.size * 0.15,
-                task.targetImage.width * task.targetImage.height * 0.07
+                shape.size * lowerLimitCoeff1,
+                task.targetImage.width * task.targetImage.height * lowerLimitCoeff2
             )
             val crops = arrayListOf<Triple<Color, Shape, ImmutableImage>>()
-            while (crops.size < 30) {
+            while (crops.size < maxSampleSize) {
                 val variants = mutableListOf(
                     Point(0, 0) to Point(shape.width, width),
                     Point(0, 0) to Point(width, shape.height),
@@ -81,22 +87,21 @@ class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorToleran
                     .map { Triple(it.first, it.second.first!!, it.second.second) }
                     .filter { (shape.size - it.second.size) > sizeLimit }
                 var changed = false
-                if (tolerance < 100) {
-                    tolerance++
+                if (tolerance < 254) {
+                    tolerance = (tolerance + colorTolerance).coerceAtMost(255)
                     changed = true
                 }
                 if (pixelTolerance > 0) {
-                    pixelTolerance -= 0.01
+                    pixelTolerance = (pixelTolerance - (1.0 - defaultPixelTolerance) / 3).coerceAtLeast(0.0)
                     changed = true
                 }
                 if (width < 100 && pixelTolerance < 0.5) {
-                    width += 10
+                    width += defaultWidth
                     tolerance = colorTolerance
                     pixelTolerance = defaultPixelTolerance
                     changed = true
                 }
                 if (!changed) {
-                    println("break: $tolerance $pixelTolerance $width")
                     break
                 }
                 crops += autocrops
@@ -120,11 +125,13 @@ class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorToleran
                             Orientation.Y,
                             newBlockShape.lowerLeftInclusive.y
                         )
+
                         newBlockShape.lowerLeftInclusive.y == shape.lowerLeftInclusive.y -> LineCutMove(
                             nextBlock,
                             Orientation.X,
                             newBlockShape.lowerLeftInclusive.x
                         )
+
                         else -> PointCutMove(nextBlock, newBlockShape.lowerLeftInclusive)
                     }
                     newState = newState.move(firstCrop)
@@ -146,11 +153,13 @@ class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorToleran
                             Orientation.Y,
                             newBlockShape.upperRightExclusive.y - 1
                         )
+
                         newBlockShape.upperRightExclusive.y == shape.upperRightExclusive.y -> LineCutMove(
                             nextBlock,
                             Orientation.X,
                             newBlockShape.upperRightExclusive.x - 1
                         )
+
                         else -> PointCutMove(nextBlock, newBlockShape.upperRightExclusive - Point(1, 1))
                     }
                     newState = newState.move(secondCrop)
