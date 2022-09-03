@@ -1,5 +1,6 @@
 package ru.spbstu.icfpc2022
 
+import ru.spbstu.icfpc2022.algo.CuttingTactic
 import ru.spbstu.icfpc2022.algo.RectangleCropDummy
 import ru.spbstu.icfpc2022.algo.Task
 import ru.spbstu.icfpc2022.robovinchi.Robovinchi
@@ -7,7 +8,7 @@ import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import tornadofx.launch
 
 fun main() = try {
-    val problemId = 1
+    val problemId = 2
     val problems = getProblems()
     val submissions = submissions()
     val bestSubmissions = submissions.bestSubmissions()
@@ -18,7 +19,7 @@ fun main() = try {
     val bestScore = bestSubmissions[problem.id]?.score
     var task = Task(problem.id, im, problem.initialConfig, bestScore = bestScore)
     StateCollector.task = task
-    val commands = RectangleCropDummy(task).solve()
+    val commands = RectangleCropDummy(task, cuttingTactic = CuttingTactic.DUMBSNAP).solve()
     println("Solution size: ${commands.commands.size}")
     launch<Robovinchi>()
 } finally {

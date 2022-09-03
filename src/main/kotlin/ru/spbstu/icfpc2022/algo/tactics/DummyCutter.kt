@@ -4,6 +4,7 @@ import ru.spbstu.icfpc2022.algo.PersistentState
 import ru.spbstu.icfpc2022.algo.Task
 import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic.Companion.approximatelyMatches
 import ru.spbstu.icfpc2022.canvas.BlockId
+import ru.spbstu.icfpc2022.canvas.Point
 import ru.spbstu.icfpc2022.canvas.Shape
 import ru.spbstu.icfpc2022.imageParser.color
 import ru.spbstu.icfpc2022.imageParser.get
@@ -44,9 +45,12 @@ open class DummyCutter(
             var middlePoint = currentBlock.shape.middle
 
             if (useSnaps) {
-                when (val snap = task.closestSnap(middlePoint, currentBlock.shape)) {
-                    null -> {}
-                    else -> middlePoint = snap
+                when (val snap = task.closestCornerSnap(middlePoint, currentBlock.shape)) {
+                    is Point -> middlePoint = snap
+                    else -> when (val snap = task.closestSnap(middlePoint, currentBlock.shape)) {
+                        null -> {}
+                        else -> middlePoint = snap
+                    }
                 }
             }
 

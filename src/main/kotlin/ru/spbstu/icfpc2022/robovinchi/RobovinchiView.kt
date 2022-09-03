@@ -19,7 +19,7 @@ class RobovinchiView : View() {
     var curCommand = SimpleStringProperty(StateCollector.commandToCanvas[curStep.value].first.toString())
     var nextCommand = SimpleStringProperty(StateCollector.commandToCanvas[curStep.value + 1].first.toString())
     var curRectangles = mutableListOf<Rectangle>()
-    val snapPoints = StateCollector.task.snapPoints.flatMap { it.value.values }.map {
+    val snapPoints = StateCollector.task.snapPoints.toSet().map {
         val x = it.x.toDouble()
         val y = StateCollector.canvasHeight - it.y.toDouble()
         Circle(x, y, 0.5, Color(0.0, 1.0, 1.0, 0.5)).attachTo(this)
