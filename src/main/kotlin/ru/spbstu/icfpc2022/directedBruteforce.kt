@@ -17,12 +17,12 @@ data class Parameters(
     val limit: Int = 7500,
 ) {
     fun neighbours(): Collection<Parameters> = setOf(
-        copy(colorTolerance = colorTolerance + 1),
-        copy(colorTolerance = (colorTolerance - 1).coerceAtLeast(0)),
-        copy(pixelTolerance = pixelTolerance + 1),
-        copy(pixelTolerance = (pixelTolerance - 1).coerceAtLeast(0)),
-        copy(limit = limit + 200),
-        copy(limit = (limit - 200).coerceAtLeast(0)),
+        copy(colorTolerance = colorTolerance + 2),
+        copy(colorTolerance = (colorTolerance - 2).coerceAtLeast(0)),
+        copy(pixelTolerance = pixelTolerance + 2),
+        copy(pixelTolerance = (pixelTolerance - 2).coerceAtLeast(0)),
+        copy(limit = limit + 250),
+        copy(limit = (limit - 250).coerceAtLeast(0)),
     )
 }
 
@@ -87,7 +87,7 @@ fun main(args: Array<String>) {
                             }.sortedBy { it.second }.take(3)
 
                             for ((neighbour, score) in top3) {
-                                if (score < currentScore) {
+                                if (score <= currentScore) {
                                     currentScore = score
                                     currentWinner = neighbour
                                     que.add(neighbour)
