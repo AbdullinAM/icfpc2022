@@ -37,7 +37,7 @@ fun main(args: Array<String>) {
                                 println("Parameters: colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cutterTactic")
                                 val rectangleCropDummy = RectangleCropDummy(task, colorTolerance, pixelTolerance * 0.05, limit.toLong(), cutterTactic)
                                 val solution = rectangleCropDummy.solve()
-                                if (solution.score < (bestScore ?: Long.MAX_VALUE)) {
+                                if (solution.score < task.bestScoreOrMax) {
                                     println("Succeeded with parameters: colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cutterTactic")
                                     submit(problem.id, solution.commands.joinToString("\n"))
                                     task = Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
