@@ -10,7 +10,9 @@ import tornadofx.launch
 fun main() {
     val problemId = 2
     StateCollector.pathToProblemImage = "problems/$problemId.png"
-    val commands = AutocropDummy(Task(problemId)).solve()
+    val task = Task(problemId)
+    StateCollector.task = task
+    val commands = AutocropDummy(task, 27, 4000).solve()
     println("Solution size: ${commands.size}")
     launch<Robovinchi>()
 }
