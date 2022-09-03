@@ -2,9 +2,12 @@ package ru.spbstu.icfpc2022.robovinchi
 
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
+import javafx.scene.Node
 import javafx.scene.control.ScrollBar
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
+import javafx.scene.paint.Paint
+import javafx.scene.shape.Circle
 import javafx.scene.shape.Rectangle
 import javafx.scene.text.Text
 import tornadofx.*
@@ -16,7 +19,11 @@ class RobovinchiView : View() {
     var curCommand = SimpleStringProperty(StateCollector.commandToCanvas[curStep.value].first.toString())
     var nextCommand = SimpleStringProperty(StateCollector.commandToCanvas[curStep.value + 1].first.toString())
     var curRectangles = mutableListOf<Rectangle>()
-
+    val snapPoints = StateCollector.task.snapPoints.flatMap { it.value.values }.map {
+        val x = it.x.toDouble()
+        val y = StateCollector.canvasHeight - it.y.toDouble()
+        Circle(x, y, 0.5, Color(1.0, 0.0, 1.0, 0.5)).attachTo(this)
+    }.takeIf { it.size < 20000 }.orEmpty()
 
     private fun getRectanglesFromBlocks(): List<Rectangle> {
         val blocks = StateCollector.commandToCanvas.getOrNull(curStep.value) ?: return curRectangles
@@ -43,6 +50,10 @@ class RobovinchiView : View() {
 
     override val root = pane {
         val globalPane = this
+        globalPane.apply {
+            snapPoints.forEach { it.attachTo(globalPane) }
+        }
+
         val curStepPane = pane {
             text(curStep.toString()).attachTo(this)
             layoutX = 0.0
@@ -81,6 +92,8 @@ class RobovinchiView : View() {
                     rects.forEach { rect ->
                         rect.attachTo(globalPane).also { curRectangles.add(it) }
                     }
+                    snapPoints.forEach { it.removeFromParent() }
+                    snapPoints.forEach { it.attachTo(globalPane) }
                     curCommand.set(nextCommand.value)
                     val newNextCommand =
                         StateCollector.commandToCanvas.getOrNull(curStep.value + 1)?.first?.toString() ?: "END"
@@ -106,6 +119,8 @@ class RobovinchiView : View() {
                     rects.forEach { rect ->
                         rect.attachTo(globalPane).also { curRectangles.add(it) }
                     }
+                    snapPoints.forEach { it.removeFromParent() }
+                    snapPoints.forEach { it.attachTo(globalPane) }
                     curCommand.set(nextCommand.value)
                     val newNextCommand =
                         StateCollector.commandToCanvas.getOrNull(curStep.value + 1)?.first?.toString() ?: "END"
@@ -135,6 +150,8 @@ class RobovinchiView : View() {
                             rect.attachTo(globalPane).also { curRectangles.add(it) }
                         }
                     }
+                    snapPoints.forEach { it.removeFromParent() }
+                    snapPoints.forEach { it.attachTo(globalPane) }
                     curCommand.set(nextCommand.value)
                     val newNextCommand =
                         StateCollector.commandToCanvas.getOrNull(curStep.value + 1)?.first?.toString() ?: "END"

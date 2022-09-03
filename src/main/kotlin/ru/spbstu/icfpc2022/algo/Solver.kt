@@ -4,6 +4,7 @@ import com.sksamuel.scrimage.ImmutableImage
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic
 import ru.spbstu.icfpc2022.canvas.Canvas
 import ru.spbstu.icfpc2022.canvas.Point
 import ru.spbstu.icfpc2022.canvas.Shape
@@ -50,8 +51,10 @@ data class Task(
         for (pixel in targetImage) {
             val nextRight = targetImage.getOrNull(pixel.x + 1, pixel.y)
             val nextDown = targetImage.getOrNull(pixel.x, pixel.y + 1)
-            if (nextRight != null && nextRight.color != pixel.color) addSnap(pixel.point)
-            if (nextDown != null && nextDown.color != pixel.color) addSnap(pixel.point)
+            if (nextRight != null && !AutocropTactic.approximatelyMatches(nextRight.color, pixel.color, 27))
+                addSnap(pixel.point)
+            if (nextDown != null && !AutocropTactic.approximatelyMatches(nextDown.color, pixel.color, 27))
+                addSnap(pixel.point)
         }
     }
 }
