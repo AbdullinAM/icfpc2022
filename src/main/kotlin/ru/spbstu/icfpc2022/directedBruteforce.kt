@@ -15,7 +15,6 @@ data class Parameters(
     val colorTolerance: Int = 25,
     val pixelTolerance: Int = 15,
     val limit: Int = 7500,
-    val cuttingTactic: CuttingTactic = CuttingTactic.DUMB
 ) {
     fun neighbours(): Collection<Parameters> = setOf(
         copy(colorTolerance = colorTolerance + 1),
@@ -24,7 +23,7 @@ data class Parameters(
         copy(pixelTolerance = (pixelTolerance - 1).coerceAtLeast(0)),
         copy(limit = limit + 200),
         copy(limit = (limit - 200).coerceAtLeast(0)),
-    ) + CuttingTactic.values().filter { it != cuttingTactic }.map { copy(cuttingTactic = it) }
+    )
 }
 
 fun main(args: Array<String>) {
@@ -42,61 +41,62 @@ fun main(args: Array<String>) {
         runBlocking {
             withContext(Dispatchers.Default) {
                 forEachAsync(taskIds) { taskId ->
-                    val problem = problems.first { it.id == taskId }
-                    val im = problem.target
-                    val bestScore = bestSubmissions[problem.id]?.score
-                    var task = Task(problem.id, im, problem.initialConfig, bestScore = bestScore)
-                    StateCollector.turnMeOff = true
+                    forEachAsync(CuttingTactic.values().asList()) { cuttingTactic ->
+                        val problem = problems.first { it.id == taskId }
+                        val im = problem.target
+                        val bestScore = bestSubmissions[problem.id]?.score
+                        var task = Task(problem.id, im, problem.initialConfig, bestScore = bestScore)
+                        StateCollector.turnMeOff = true
 
-                    val visited: MutableSet<Parameters> = Collections.synchronizedSet(mutableSetOf<Parameters>())
-                    val que = ConcurrentLinkedQueue<Parameters>()
-                    que.add(Parameters())
+                        val visited: MutableSet<Parameters> = Collections.synchronizedSet(mutableSetOf<Parameters>())
+                        val que = ConcurrentLinkedQueue<Parameters>()
+                        que.add(Parameters())
 
-                    var currentScore = Long.MAX_VALUE
-                    var currentWinner = Parameters()
-                    while (que.isNotEmpty()) {
-                        val next = que.poll()
-                        visited.add(next)
+                        var currentScore = Long.MAX_VALUE
+                        var currentWinner = Parameters()
+                        while (que.isNotEmpty()) {
+                            val next = que.poll()
+                            visited.add(next)
 
-                        val top3 = mapAsync(next.neighbours().filter { it !in visited }.asIterable()) {
-                            val colorTolerance = it.colorTolerance
-                            val pixelTolerance = it.pixelTolerance
-                            val limit = it.limit
-                            val cutterTactic = it.cuttingTactic
-                            try {
-                                println("Parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cutterTactic")
-                                val rectangleCropDummy = RectangleCropDummy(
-                                    task,
-                                    colorTolerance,
-                                    pixelTolerance * 0.05,
-                                    limit.toLong(),
-                                    cutterTactic
-                                )
-                                val solution = rectangleCropDummy.solve()
-                                if (solution.score < task.bestScoreOrMax) {
-                                    println("Succeeded with parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cutterTactic")
-                                    submit(problem.id, solution.commands.joinToString("\n"))
-                                    task = Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
-                                } else {
-                                    println("Finished with parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cutterTactic")
+                            val top3 = mapAsync(next.neighbours().filter { it !in visited }.asIterable()) {
+                                val colorTolerance = it.colorTolerance
+                                val pixelTolerance = it.pixelTolerance
+                                val limit = it.limit
+                                try {
+                                    println("Parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cuttingTactic")
+                                    val rectangleCropDummy = RectangleCropDummy(
+                                        task,
+                                        colorTolerance,
+                                        pixelTolerance * 0.05,
+                                        limit.toLong(),
+                                        cuttingTactic
+                                    )
+                                    val solution = rectangleCropDummy.solve()
+                                    if (solution.score < task.bestScoreOrMax) {
+                                        println("Succeeded with parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cuttingTactic")
+                                        submit(problem.id, solution.commands.joinToString("\n"))
+                                        task = Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
+                                    } else {
+                                        println("Finished with parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cuttingTactic")
+                                    }
+                                    it to solution.score
+                                } catch (e: Throwable) {
+                                    System.err.println("Failed with parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cuttingTactic")
+                                    it to Long.MAX_VALUE
                                 }
-                                it to solution.score
-                            } catch (e: Throwable) {
-                                System.err.println("Failed with parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cutterTactic")
-                                it to Long.MAX_VALUE
-                            }
-                        }.sortedBy { it.second }.take(3)
+                            }.sortedBy { it.second }.take(3)
 
-                        for ((neighbour, score) in top3) {
-                            if (score < currentScore) {
-                                currentScore = score
-                                currentWinner = neighbour
-                                que.add(neighbour)
+                            for ((neighbour, score) in top3) {
+                                if (score < currentScore) {
+                                    currentScore = score
+                                    currentWinner = neighbour
+                                    que.add(neighbour)
+                                }
                             }
                         }
-                    }
 
-                    println("Task#$taskId\nlast score: $currentScore\nwith parameters $currentWinner")
+                        println("Task#$taskId\ncutterTactic = $cuttingTactic\nlast score: $currentScore\nwith parameters $currentWinner")
+                    }
                 }
             }
         }

@@ -1,6 +1,7 @@
 package ru.spbstu.icfpc2022.algo
 
 import com.sksamuel.scrimage.ImmutableImage
+import com.sksamuel.scrimage.pixels.Pixel
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentMap
@@ -25,6 +26,48 @@ import ru.spbstu.ktuples.zip
 import ru.spbstu.wheels.resize
 import java.util.TreeMap
 import kotlin.math.round
+
+class PointHolder {
+    val pointData = TreeMap<Int, TreeMap<Int, Point>>()
+
+    fun add(point: Point) {
+        pointData.getOrPut(point.x) { TreeMap() }.put(point.y, point)
+    }
+
+    fun closestPointTo(point: Point, inShape: Shape): Point? {
+        val submap = pointData.subMap(
+            inShape.lowerLeftInclusive.x,
+            false,
+            inShape.upperRightExclusive.x - 1,
+            false
+        )
+        val xh = submap.ceilingEntry(point.x)
+        val xl = submap.floorEntry(point.x)
+
+        val xhsub = xh?.value?.subMap(
+            inShape.lowerLeftInclusive.y,
+            false,
+            inShape.upperRightExclusive.y - 1,
+            false
+        )
+        val cand1 = xhsub?.ceilingEntry(point.y)?.value
+        val cand2 = xhsub?.floorEntry(point.y)?.value
+        val xlsub = xl?.value?.subMap(
+            inShape.lowerLeftInclusive.y,
+            false,
+            inShape.upperRightExclusive.y - 1,
+            false
+        )
+        val cand3 = xlsub?.ceilingEntry(point.y)?.value
+        val cand4 = xlsub?.floorEntry(point.y)?.value
+
+        return setOfNotNull(cand1, cand2, cand3, cand4)
+            .filter { it.isStrictlyInside(inShape.lowerLeftInclusive, inShape.upperRightExclusive) }
+            .minByOrNull { point.distance(it) }
+    }
+
+    fun toSet() = pointData.flatMap { it.value.values }
+}
 
 data class Task(
     val problemId: Int,
@@ -62,52 +105,40 @@ data class Task(
 
     val bestScoreOrMax get() = (bestScore ?: Long.MAX_VALUE)
 
-    val snapPoints = TreeMap<Int, TreeMap<Int, Point>>()
+    val snapPoints = PointHolder()
+    val cornerSnapPoints = PointHolder()
 
-    fun addSnap(point: Point) {
-        snapPoints.getOrPut(point.x) { TreeMap() }.put(point.y, point)
-    }
+    fun closestSnap(point: Point, inShape: Shape): Point? = snapPoints.closestPointTo(point, inShape)
+    fun closestCornerSnap(point: Point, inShape: Shape): Point? = cornerSnapPoints.closestPointTo(point, inShape)
 
-    fun closestSnap(point: Point, inShape: Shape): Point? {
-        val submap = snapPoints.subMap(
-            inShape.lowerLeftInclusive.x,
-            false,
-            inShape.upperRightExclusive.x - 1,
-            false
-        )
-        val xh = submap.ceilingEntry(point.x)
-        val xl = submap.floorEntry(point.x)
+    inline val Pixel.below get() = targetImage.getOrNull(x, y + 1)
+    inline val Pixel.above get() = targetImage.getOrNull(x, y - 1)
+    inline val Pixel.right get() = targetImage.getOrNull(x + 1, y)
+    inline val Pixel.left get() = targetImage.getOrNull(x - 1, y)
 
-        val xhsub = xh?.value?.subMap(
-            inShape.lowerLeftInclusive.y,
-            false,
-            inShape.upperRightExclusive.y - 1,
-            false
-        )
-        val cand1 = xhsub?.ceilingEntry(point.y)?.value
-        val cand2 = xhsub?.floorEntry(point.y)?.value
-        val xlsub = xl?.value?.subMap(
-            inShape.lowerLeftInclusive.y,
-            false,
-            inShape.upperRightExclusive.y - 1,
-            false
-        )
-        val cand3 = xlsub?.ceilingEntry(point.y)?.value
-        val cand4 = xlsub?.floorEntry(point.y)?.value
 
-        return setOfNotNull(cand1, cand2, cand3, cand4)
-            .filter { it.isStrictlyInside(inShape.lowerLeftInclusive, inShape.upperRightExclusive) }
-            .minByOrNull { point.distance(it) }
-    }
 
     init {
+        infix fun Pixel?.notMatches(pixel2: Pixel?): Boolean {
+            this ?: return false
+            pixel2 ?: return false
+            return !AutocropTactic.approximatelyMatches(color, pixel2.color, 27)
+        }
+
         for (pixel in targetImage) {
-            val nextRight = targetImage.getOrNull(pixel.x + 1, pixel.y)
-            val nextDown = targetImage.getOrNull(pixel.x, pixel.y + 1)
-            if (nextRight != null && !AutocropTactic.approximatelyMatches(nextRight.color, pixel.color, 27))
-                addSnap(pixel.point)
-            if (nextDown != null && !AutocropTactic.approximatelyMatches(nextDown.color, pixel.color, 27))
-                addSnap(pixel.point)
+            val nextRight = pixel.right
+            if (nextRight notMatches pixel) {
+                snapPoints.add(nextRight!!.point)
+                if (pixel notMatches pixel.above || pixel notMatches pixel.below)
+                    cornerSnapPoints.add(nextRight.point)
+            }
+
+            val nextUp = pixel.above
+            if (nextUp notMatches pixel) {
+                snapPoints.add(nextUp!!.point)
+                if (pixel notMatches pixel.left || pixel notMatches pixel.right)
+                    cornerSnapPoints.add(nextUp.point)
+            }
         }
     }
 }
