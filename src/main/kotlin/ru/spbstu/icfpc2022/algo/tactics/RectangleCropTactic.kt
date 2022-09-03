@@ -44,8 +44,8 @@ class RectangleCropTactic(
                 val newCrop = cropPoint + mutation
                 if (newCrop.x >= currentBlock.shape.upperRightExclusive.x) continue
                 if (newCrop.y >= currentBlock.shape.upperRightExclusive.y) continue
-                val newShape = Shape(currentBlock.shape.lowerLeftInclusive, newCrop)
-                averageColor = computeBlockAverage(task.targetImage, Shape(currentBlock.shape.lowerLeftInclusive, newCrop))
+                val newShape = Shape(cropBase, newCrop)
+                averageColor = computeBlockAverage(task.targetImage, newShape)
 
                 if (approx(averageColor, colorTolerance, task.targetImage.pixels(newShape).toTypedArray(), 0.8)) {
                     cropPoint = newCrop
@@ -65,7 +65,7 @@ class RectangleCropTactic(
         val cropBase = currentBlock.shape.let {
             Point(it.lowerLeftInclusive.x, it.upperRightExclusive.y)
         }
-        var cropPoint = cropBase - Point(0, 1)
+        var cropPoint = cropBase + Point(1, -1)
         var averageColor: Color
 
         val mutations = mutableListOf(Point(0, -1), Point(1, 0))
@@ -76,7 +76,10 @@ class RectangleCropTactic(
                 val newCrop = cropPoint + mutation
                 if (newCrop.x >= currentBlock.shape.upperRightExclusive.x) continue
                 if (newCrop.y <= currentBlock.shape.lowerLeftInclusive.y) continue
-                val newShape = Shape(currentBlock.shape.lowerLeftInclusive, newCrop)
+                val newShape = Shape(
+                    lowerLeftInclusive = Point(cropBase.x, newCrop.y),
+                    upperRightExclusive = Point(newCrop.x, cropBase.y)
+                )
                 averageColor = computeBlockAverage(task.targetImage, newShape)
 
                 if (approx(averageColor, colorTolerance, task.targetImage.pixels(newShape).toTypedArray(), 0.8)) {
@@ -109,8 +112,8 @@ class RectangleCropTactic(
                 val newCrop = cropPoint + mutation
                 if (newCrop.x <= currentBlock.shape.lowerLeftInclusive.x) continue
                 if (newCrop.y <= currentBlock.shape.lowerLeftInclusive.y) continue
-                val newShape = Shape(currentBlock.shape.lowerLeftInclusive, newCrop)
-                averageColor = computeBlockAverage(task.targetImage, Shape(currentBlock.shape.lowerLeftInclusive, newCrop))
+                val newShape = Shape(newCrop, cropBase)
+                averageColor = computeBlockAverage(task.targetImage, newShape)
 
                 if (approx(averageColor, colorTolerance, task.targetImage.pixels(newShape).toTypedArray(), pixelTolerance)) {
                     cropPoint = newCrop
@@ -130,7 +133,7 @@ class RectangleCropTactic(
         val cropBase = currentBlock.shape.let {
             Point(it.upperRightExclusive.x, it.lowerLeftInclusive.y)
         }
-        var cropPoint = cropBase - Point(1, 0)
+        var cropPoint = cropBase + Point(-1, 1)
         var averageColor: Color
 
         val mutations = mutableListOf(Point(0, 1), Point(-1, 0))
@@ -141,7 +144,10 @@ class RectangleCropTactic(
                 val newCrop = cropPoint + mutation
                 if (newCrop.x <= currentBlock.shape.lowerLeftInclusive.x) continue
                 if (newCrop.y >= currentBlock.shape.upperRightExclusive.y) continue
-                val newShape = Shape(currentBlock.shape.lowerLeftInclusive, newCrop)
+                val newShape = Shape(
+                    Point(newCrop.x, cropBase.y),
+                    Point(cropBase.x, newCrop.y)
+                )
                 averageColor = computeBlockAverage(task.targetImage, newShape)
 
                 if (approx(averageColor, colorTolerance, task.targetImage.pixels(newShape).toTypedArray(), 0.8)) {

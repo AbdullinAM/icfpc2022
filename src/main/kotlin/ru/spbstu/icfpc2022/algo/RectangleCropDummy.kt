@@ -22,7 +22,7 @@ class RectangleCropDummy(
 
 
         val autocropTactic = AutocropTactic(task, storage, colorTolerance, pixelTolerance)
-        state = autocropTactic(state, SimpleId(0))
+        state = autocropTactic(state, SimpleId(state.canvas.blockId))
 
         val rectangleCropTactic = RectangleCropTactic(task, storage, colorTolerance, pixelTolerance, limit)
         for (left in autocropTactic.leftBlocks) {
