@@ -13,7 +13,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.outputStream
 
 private const val token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5hcHN0ZXJfMTk5N0BtYWlsLnJ1IiwiZXhwIjoxNjYyMjA2NDg1LCJvcmlnX2lhdCI6MTY2MjEyMDA4NX0.lYQen_2LJelsyZ3czfO3jqTcLmyJM7GL7YBtvwoyJ8U"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5hcHN0ZXJfMTk5N0BtYWlsLnJ1IiwiZXhwIjoxNjYyMjkzMzY0LCJvcmlnX2lhdCI6MTY2MjIwNjk2NH0.McBW7n5aGifJUwOtkD_yhyR2VVN1BR6SPLkCfZNLBiM"
 
 private const val baseUrl = "https://robovinci.xyz/api"
 
