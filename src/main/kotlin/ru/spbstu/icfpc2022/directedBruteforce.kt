@@ -19,10 +19,10 @@ data class Parameters(
     fun neighbours(): Collection<Parameters> = setOf(
         copy(colorTolerance = colorTolerance + 2),
         copy(colorTolerance = (colorTolerance - 2).coerceAtLeast(0)),
-        copy(pixelTolerance = pixelTolerance + 2),
-        copy(pixelTolerance = (pixelTolerance - 2).coerceAtLeast(0)),
-        copy(limit = limit + 250),
-        copy(limit = (limit - 250).coerceAtLeast(0)),
+        copy(pixelTolerance = pixelTolerance + 1),
+        copy(pixelTolerance = (pixelTolerance - 1).coerceAtLeast(0)),
+        copy(limit = limit + 500),
+        copy(limit = (limit - 500).coerceAtLeast(0)),
     )
 }
 
@@ -49,6 +49,8 @@ fun main(args: Array<String>) {
                         StateCollector.turnMeOff = true
 
                         val visited: MutableSet<Parameters> = Collections.synchronizedSet(mutableSetOf<Parameters>())
+                        val pending: MutableSet<Parameters> = Collections.synchronizedSet(mutableSetOf<Parameters>())
+
                         val que = ConcurrentLinkedQueue<Parameters>()
                         que.add(Parameters())
 
@@ -56,14 +58,15 @@ fun main(args: Array<String>) {
                         var currentWinner = Parameters()
                         while (que.isNotEmpty()) {
                             val next = que.poll()
-                            visited.add(next)
 
-                            val top3 = mapAsync(next.neighbours().filter { it !in visited }.asIterable()) {
+                            pending.remove(next)
+                            visited.add(next) || continue
+
+                            val top3 = mapAsync(next.neighbours().filter { it !in visited && it !in pending }.asIterable()) {
                                 val colorTolerance = it.colorTolerance
                                 val pixelTolerance = it.pixelTolerance
                                 val limit = it.limit
                                 try {
-                                    println("Parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cuttingTactic")
                                     val rectangleCropDummy = RectangleCropDummy(
                                         task,
                                         colorTolerance,
@@ -73,24 +76,26 @@ fun main(args: Array<String>) {
                                     )
                                     val solution = rectangleCropDummy.solve()
                                     if (solution.score < task.bestScoreOrMax) {
-                                        println("Succeeded with parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cuttingTactic")
                                         submit(problem.id, solution.commands.joinToString("\n"))
                                         task = Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
-                                    } else {
-                                        println("Finished with parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cuttingTactic")
                                     }
                                     it to solution.score
                                 } catch (e: Throwable) {
                                     System.err.println("Failed with parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cuttingTactic")
                                     it to Long.MAX_VALUE
                                 }
-                            }.sortedBy { it.second }.take(3)
+                            }.groupBy { it.second }.minBy { it.key }.value
 
                             for ((neighbour, score) in top3) {
                                 if (score <= currentScore) {
+                                    if (score < currentScore)
+                                        println("New score: $score, parameters: taskId = $taskId, $neighbour, cutterTactic = $cuttingTactic")
                                     currentScore = score
                                     currentWinner = neighbour
-                                    que.add(neighbour)
+                                    if (neighbour !in pending) {
+                                        que.add(neighbour)
+                                        pending.add(neighbour)
+                                    }
                                 }
                             }
                         }

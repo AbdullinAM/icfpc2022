@@ -4,8 +4,23 @@ import com.sksamuel.scrimage.ImmutableImage
 import ru.spbstu.icfpc2022.canvas.Color
 import ru.spbstu.icfpc2022.canvas.Point
 import ru.spbstu.icfpc2022.canvas.Shape
+import ru.spbstu.icfpc2022.imageParser.euclid
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.getCanvasColor
+import kotlin.math.sqrt
+
+fun digest(image: ImmutableImage, shape: Shape, color: Color): Double {
+    var total = 0.0
+    for (x in shape.lowerLeftInclusive.x until shape.upperRightExclusive.x) {
+        for (y in shape.lowerLeftInclusive.y until shape.upperRightExclusive.y) {
+            val pixel = image[x, y]
+            total += euclid(
+                color.r - pixel.red(), color.g - pixel.green(), color.b - pixel.blue(), color.a - pixel.alpha()
+            )
+        }
+    }
+    return total
+}
 
 fun computeBlockAverage(image: ImmutableImage, shape: Shape): Color {
     var r = 0L
