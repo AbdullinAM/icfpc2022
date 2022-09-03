@@ -7,7 +7,7 @@ import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import tornadofx.launch
 
 fun main() {
-    val problemId = 8
+    val problemId = 3
     StateCollector.pathToProblemImage = "problems/$problemId.png"
     val task = Task(problemId)
     StateCollector.task = task

@@ -69,11 +69,11 @@ class PersistentState(
 
     val score: Long by lazy { round(similarity * 0.005).toLong() + cost }
 
-    fun move(move: Move): PersistentState {
+    fun move(move: Move, ignoreUI: Boolean = false): PersistentState {
         val newCost = cost + canvas.costOf(move)
         val newCanvas = canvas.apply(move)
         return PersistentState(task, newCanvas, commands.add(move), newCost)
-            .also { StateCollector.commandToCanvas.add(move to newCanvas.allSimpleBlocks().toList()) }
+            .also { if (!ignoreUI) StateCollector.commandToCanvas.add(move to newCanvas.allSimpleBlocks().toList()) }
     }
 
     fun dumpSolution(): String = commands.joinToString("\n")
