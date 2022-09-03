@@ -3,11 +3,14 @@ package ru.spbstu.icfpc2022.algo
 import ru.spbstu.icfpc2022.algo.tactics.*
 import ru.spbstu.icfpc2022.canvas.SimpleId
 
+enum class CuttingTactic { DUMB, DUMBSNAP, EXHAUSTIVE }
+
 class RectangleCropDummy(
     task: Task,
     val colorTolerance: Int = 17,
     val pixelTolerance: Double = 0.95,
-    val limit: Long = 5000L
+    val limit: Long = 5000L,
+    val cuttingTactic: CuttingTactic = CuttingTactic.DUMB
 ) : Solver(task) {
     override fun solve(): PersistentState {
         var state = task.initialState
@@ -27,7 +30,13 @@ class RectangleCropDummy(
         }
 
         val previousBlocks = state.canvas.blocks.keys
-        val dummyCutter = DummyCutter(
+        val cutterCreator = when (cuttingTactic) {
+            CuttingTactic.EXHAUSTIVE -> ::ExhaustiveCutter
+            CuttingTactic.DUMBSNAP -> ::DummyCutterWithSnaps
+            else -> ::DummyCutter
+        }
+
+        val dummyCutter = cutterCreator(
             task,
             storage,
             limit,
