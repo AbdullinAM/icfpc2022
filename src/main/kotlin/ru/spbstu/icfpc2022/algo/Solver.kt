@@ -2,22 +2,28 @@ package ru.spbstu.icfpc2022.algo
 
 import com.sksamuel.scrimage.ImmutableImage
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentMap
 import ru.spbstu.icfpc2022.InitialConfig
 import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic
 import ru.spbstu.icfpc2022.canvas.Canvas
+import ru.spbstu.icfpc2022.canvas.Color
 import ru.spbstu.icfpc2022.canvas.Point
 import ru.spbstu.icfpc2022.canvas.Shape
-import ru.spbstu.icfpc2022.canvas.SimpleBlock
 import ru.spbstu.icfpc2022.canvas.SimpleId
 import ru.spbstu.icfpc2022.imageParser.color
+import ru.spbstu.icfpc2022.imageParser.euclid
+import ru.spbstu.icfpc2022.imageParser.get
+import ru.spbstu.icfpc2022.imageParser.getCanvasColor
 import ru.spbstu.icfpc2022.imageParser.getOrNull
 import ru.spbstu.icfpc2022.imageParser.parseImage
 import ru.spbstu.icfpc2022.imageParser.point
-import ru.spbstu.icfpc2022.imageParser.score
+import ru.spbstu.icfpc2022.imageParser.toImage
 import ru.spbstu.icfpc2022.move.Move
 import ru.spbstu.icfpc2022.robovinchi.StateCollector
+import ru.spbstu.ktuples.zip
 import java.util.TreeMap
 import kotlin.math.round
 
@@ -111,20 +117,83 @@ class PersistentState(
     val task: Task,
     val canvas: Canvas = Canvas.empty(task.targetImage.width, task.targetImage.height),
     val commands: PersistentList<Move> = persistentListOf(),
+    val similarityCounter: PersistentSimilarity? = null,
     val cost: Long = 0L
 ) {
-    val similarity: Double by lazy { score(canvas, task.targetImage) }
+    val similarity: Double by lazy {
+        val counter = similarityCounter ?: PersistentSimilarity.initial(canvas, task.targetImage)
+        counter.similarity
+    }
 
     val score: Long by lazy { round(similarity * 0.005).toLong() + cost }
 
+    fun withIncrementalSimilarity() = PersistentState(
+        task, canvas, commands,
+        PersistentSimilarity.initial(canvas, task.targetImage),
+        cost
+    )
+
     fun move(move: Move, ignoreUI: Boolean = false): PersistentState {
         val newCost = cost + canvas.costOf(move)
+        val newSimilarity = similarityCounter?.let { canvas.updateSimilarity(move, it) }
         val newCanvas = canvas.apply(move)
-        return PersistentState(task, newCanvas, commands.add(move), newCost)
-            .also { if (!ignoreUI && !StateCollector.turnMeOff) StateCollector.commandToCanvas.add(move to newCanvas.allSimpleBlocks().toList()) }
+        return PersistentState(task, newCanvas, commands.add(move), newSimilarity, newCost)
+            .also {
+                if (!ignoreUI && !StateCollector.turnMeOff) StateCollector.commandToCanvas.add(
+                    move to newCanvas.allSimpleBlocks().toList()
+                )
+            }
     }
 
     fun dumpSolution(): String = commands.joinToString("\n")
+}
+
+class PersistentSimilarity(
+    val target: ImmutableImage,
+    val pixelSimilarity: PersistentMap<Pair<Int, Int>, Double>,
+    val similarity: Double
+) {
+    fun update(shape: Shape, color: Color): PersistentSimilarity {
+        val pixelDiff = pixelSimilarity.builder()
+        var newSimilarity = similarity
+        for (x in shape.lowerLeftInclusive.x until shape.upperRightExclusive.x) {
+            for (y in shape.lowerLeftInclusive.y until shape.upperRightExclusive.y) {
+                val targetColor = target.get(x, y).getCanvasColor()
+                val diff = euclid(
+                    targetColor.r - color.r,
+                    targetColor.g - color.g,
+                    targetColor.b - color.b,
+                    targetColor.a - color.a,
+                )
+                val oldDiff = pixelDiff.put(x to y, diff)
+                    ?: error("no diff for pixel (${x}, ${y})")
+                newSimilarity -= oldDiff
+                newSimilarity += diff
+            }
+        }
+        return PersistentSimilarity(target, pixelDiff.build(), newSimilarity)
+    }
+
+    companion object {
+        fun initial(canvas: Canvas, targetImage: ImmutableImage): PersistentSimilarity {
+            val pixelSimilarity = persistentHashMapOf<Pair<Int, Int>, Double>().builder()
+            val canvasImage = canvas.toImage()
+            val similarity =
+                zip(targetImage.iterator().asSequence(), canvasImage.iterator().asSequence()) { target, cImage ->
+                    check(target.x == cImage.x)
+                    check(target.y == cImage.y)
+                    val diff = euclid(
+                        target.red() - cImage.red(),
+                        target.green() - cImage.green(),
+                        target.blue() - cImage.blue(),
+                        target.alpha() - cImage.alpha()
+                    )
+                    pixelSimilarity[target.x to target.y] = diff
+                    diff
+                }.sum()
+            return PersistentSimilarity(targetImage, pixelSimilarity.build(), similarity)
+        }
+    }
 }
 
 val Task.initialState: PersistentState

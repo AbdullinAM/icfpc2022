@@ -2,6 +2,7 @@ package ru.spbstu.icfpc2022.canvas
 
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentMapOf
+import ru.spbstu.icfpc2022.algo.PersistentSimilarity
 import ru.spbstu.icfpc2022.move.ColorMove
 import ru.spbstu.icfpc2022.move.LineCutMove
 import ru.spbstu.icfpc2022.move.MergeMove
@@ -645,6 +646,20 @@ data class Canvas(
                 block.color
             )
         }.toSet()
+
+    fun updateSimilarity(move: Move, similarity: PersistentSimilarity) = when (move) {
+        is LineCutMove,
+        is MergeMove,
+        is PointCutMove -> similarity
+        is ColorMove -> {
+            val block = blocks[move.block]!!.shape
+            similarity.update(block, move.color)
+        }
+        is SwapMove -> {
+            val blocks = blocks[move.first]!!.simpleChildren() + blocks[move.second]!!.simpleChildren()
+            blocks.fold(similarity) { sim, block -> sim.update(block.shape, block.color) }
+        }
+    }
 
     companion object {
         fun empty(width: Int, height: Int): Canvas {
