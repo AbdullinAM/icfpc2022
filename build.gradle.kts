@@ -50,12 +50,15 @@ application {
     mainClass.set(icfpcMainClassName)
 }
 
-val fatJar = task("fatJar", type = Jar::class) {
+fun buildFatJar(name: String, mainClass: String) = task("fatJar$name", type = Jar::class) {
     manifest {
-        attributes(mapOf("Main-Class" to icfpcMainClassName))
+        attributes(mapOf("Main-Class" to mainClass))
     }
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    archiveBaseName.set("${archiveBaseName.get()}-jar-with-dependencies")
+    archiveBaseName.set("${archiveBaseName.get()}-$name")
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
     with(tasks.jar.get() as CopySpec)
 }
+
+val bruteforceJar = buildFatJar("bruteforce", icfpcMainClassName)
+val fuzzerJar = buildFatJar("fuzzer", "ru.spbstu.icfpc2022.FuzzerKt")
