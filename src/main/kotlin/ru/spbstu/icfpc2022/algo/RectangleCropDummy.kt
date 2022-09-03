@@ -1,7 +1,6 @@
 package ru.spbstu.icfpc2022.algo
 
 import ru.spbstu.icfpc2022.algo.tactics.*
-import ru.spbstu.icfpc2022.canvas.Canvas
 import ru.spbstu.icfpc2022.canvas.SimpleId
 
 class RectangleCropDummy(
@@ -11,12 +10,13 @@ class RectangleCropDummy(
     val limit: Long = 5000L
 ) : Solver(task) {
     override fun solve(): PersistentState {
-        var state = PersistentState(
-            task,
-            Canvas.empty(task.targetImage.width, task.targetImage.height)
-        )
+        var state = task.initialState
 
         val storage = TacticStorage()
+
+        val mergeToOneTactic = MergeToOneTactic(task, storage)
+        state = mergeToOneTactic(state)
+
 
         val autocropTactic = AutocropTactic(task, storage, colorTolerance, pixelTolerance)
         state = autocropTactic(state, SimpleId(0))

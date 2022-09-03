@@ -167,7 +167,7 @@ fun main() = try {
         val im = problem.target
 
         val bestScore = bestSubmissions[problem.id]?.score
-        val task = Task(problem.id, im, bestScore = bestScore)
+        val task = Task(problem.id, im, problem.initialConfig, bestScore = bestScore)
         val rectangleCropDummy = RectangleCropDummy(task)
         val solution = rectangleCropDummy.solve()
         if (solution.score < (bestScore ?: Long.MAX_VALUE)) {
