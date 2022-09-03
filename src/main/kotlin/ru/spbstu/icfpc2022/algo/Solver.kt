@@ -2,8 +2,6 @@ package ru.spbstu.icfpc2022.algo
 
 import com.sksamuel.scrimage.ImmutableImage
 import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentMap
 import ru.spbstu.icfpc2022.InitialConfig
@@ -24,6 +22,7 @@ import ru.spbstu.icfpc2022.imageParser.toImage
 import ru.spbstu.icfpc2022.move.Move
 import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import ru.spbstu.ktuples.zip
+import ru.spbstu.wheels.resize
 import java.util.TreeMap
 import kotlin.math.round
 
@@ -150,7 +149,7 @@ class PersistentState(
 
 class PersistentSimilarity(
     val target: ImmutableImage,
-    val pixelSimilarity: PersistentMap<Pair<Int, Int>, Double>,
+    val pixelSimilarity: PersistentList<Double>,
     val similarity: Double
 ) {
     fun update(shape: Shape, color: Color): PersistentSimilarity {
@@ -165,8 +164,9 @@ class PersistentSimilarity(
                     targetColor.b - color.b,
                     targetColor.a - color.a,
                 )
-                val oldDiff = pixelDiff.put(x to y, diff)
-                    ?: error("no diff for pixel (${x}, ${y})")
+                val index = computeIndexOfCoord(target.width, x, y)
+                val oldDiff = pixelDiff[index]
+                pixelDiff[index] = diff
                 newSimilarity -= oldDiff
                 newSimilarity += diff
             }
@@ -175,8 +175,10 @@ class PersistentSimilarity(
     }
 
     companion object {
+        private fun computeIndexOfCoord(width: Int, x: Int, y: Int) = x * width + y
         fun initial(canvas: Canvas, targetImage: ImmutableImage): PersistentSimilarity {
-            val pixelSimilarity = persistentHashMapOf<Pair<Int, Int>, Double>().builder()
+            val pixelSimilarity = persistentListOf<Double>().builder()
+            pixelSimilarity.resize(targetImage.width * targetImage.height) { 0.0 }
             val canvasImage = canvas.toImage()
             val similarity =
                 zip(targetImage.iterator().asSequence(), canvasImage.iterator().asSequence()) { target, cImage ->
@@ -188,7 +190,7 @@ class PersistentSimilarity(
                         target.blue() - cImage.blue(),
                         target.alpha() - cImage.alpha()
                     )
-                    pixelSimilarity[target.x to target.y] = diff
+                    pixelSimilarity[computeIndexOfCoord(targetImage.width, target.x, target.y)] = diff
                     diff
                 }.sum()
             return PersistentSimilarity(targetImage, pixelSimilarity.build(), similarity)
