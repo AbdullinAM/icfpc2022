@@ -111,7 +111,7 @@ class PersistentState(
         val newCost = cost + canvas.costOf(move)
         val newCanvas = canvas.apply(move)
         return PersistentState(task, newCanvas, commands.add(move), newCost)
-            .also { if (!ignoreUI) StateCollector.commandToCanvas.add(move to newCanvas.allSimpleBlocks().toList()) }
+            .also { if (!ignoreUI && !StateCollector.turnMeOff) StateCollector.commandToCanvas.add(move to newCanvas.allSimpleBlocks().toList()) }
     }
 
     fun dumpSolution(): String = commands.joinToString("\n")
