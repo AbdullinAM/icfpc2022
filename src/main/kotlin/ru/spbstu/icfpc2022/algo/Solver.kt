@@ -4,11 +4,10 @@ import com.sksamuel.scrimage.ImmutableImage
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toPersistentMap
+import ru.spbstu.icfpc2022.InitialConfig
 import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic
-import ru.spbstu.icfpc2022.canvas.Canvas
-import ru.spbstu.icfpc2022.canvas.Point
-import ru.spbstu.icfpc2022.canvas.Shape
-import ru.spbstu.icfpc2022.canvas.SimpleBlock
+import ru.spbstu.icfpc2022.canvas.*
 import ru.spbstu.icfpc2022.imageParser.*
 import ru.spbstu.icfpc2022.move.MergeMove
 import ru.spbstu.icfpc2022.move.Move
@@ -19,9 +18,48 @@ import kotlin.math.round
 data class Task(
     val problemId: Int,
     val targetImage: ImmutableImage,
-    val bestScore: Long? = null
+    val initialCanvas: Canvas,
+    val bestScore: Long? = null,
 ) {
-    constructor(problemId: Int) : this(problemId, parseImage("problems/$problemId.png"))
+    constructor(problemId: Int, initialConfig: InitialConfig) : this(
+        problemId,
+        parseImage("problems/$problemId.png"),
+        Canvas(
+            initialConfig.blocks.map { it.id as SimpleId }.maxOf { it.id },
+            initialConfig.blocks.map {
+                SimpleBlock(
+                    it.id,
+                    Shape(it.shape.lowerLeft, it.shape.upperRight - Point(1, 1)),
+                    it.color
+                )
+            }.associateBy { it.id }.toPersistentMap(),
+            initialConfig.width,
+            initialConfig.height
+        )
+    )
+
+    constructor(
+        problemId: Int,
+        targetImage: ImmutableImage,
+        initialConfig: InitialConfig,
+        bestScore: Long? = null,
+    ) : this(
+        problemId,
+        targetImage,
+        Canvas(
+            initialConfig.blocks.map { it.id as SimpleId }.maxOf { it.id },
+            initialConfig.blocks.map {
+                SimpleBlock(
+                    it.id,
+                    Shape(it.shape.lowerLeft, it.shape.upperRight - Point(1, 1)),
+                    it.color
+                )
+            }.associateBy { it.id }.toPersistentMap(),
+            initialConfig.width,
+            initialConfig.height
+        ),
+        bestScore
+    )
 
     val bestScoreOrMax get() = (bestScore ?: Long.MAX_VALUE)
 
@@ -79,12 +117,11 @@ class PersistentState(
     fun dumpSolution(): String = commands.joinToString("\n")
 }
 
-fun PersistentState(problemId: Int): PersistentState {
-    val task = Task(problemId)
-    val canvas = Canvas.empty(task.targetImage.width, task.targetImage.height)
-    return PersistentState(task, canvas)
-}
-
+val Task.initialState: PersistentState
+    get() = PersistentState(
+        this,
+        initialCanvas
+    )
 
 abstract class Solver(
     val task: Task

@@ -2,7 +2,6 @@ package ru.spbstu.icfpc2022.algo
 
 import ru.spbstu.icfpc2022.algo.tactics.*
 import ru.spbstu.icfpc2022.canvas.*
-import ru.spbstu.icfpc2022.move.*
 
 class AutocropDummy(
     task: Task,
@@ -11,10 +10,7 @@ class AutocropDummy(
     val limit: Long = 8000L
 ) : Solver(task) {
     override fun solve(): PersistentState {
-        var state = PersistentState(
-            task,
-            Canvas.empty(task.targetImage.width, task.targetImage.height)
-        )
+        var state = task.initialState
 
         val storage = TacticStorage()
 
