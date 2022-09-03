@@ -16,6 +16,7 @@ class RectangleCropTactic(
     task: Task,
     tacticStorage: TacticStorage,
     val colorTolerance: Int,
+    val pixelTolerance: Double,
     val limit: Long
 ) : BlockTactic(task, tacticStorage) {
     var leftBlocks = mutableSetOf<BlockId>()
@@ -106,7 +107,7 @@ class RectangleCropTactic(
                 val newShape = Shape(currentBlock.shape.lowerLeft, newCrop)
                 averageColor = computeBlockAverage(task.targetImage, Shape(currentBlock.shape.lowerLeft, newCrop))
 
-                if (approx(averageColor, colorTolerance, task.targetImage.pixels(newShape).toTypedArray(), 0.8)) {
+                if (approx(averageColor, colorTolerance, task.targetImage.pixels(newShape).toTypedArray(), pixelTolerance)) {
                     cropPoint = newCrop
                     succeded = true
                 }

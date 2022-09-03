@@ -22,6 +22,8 @@ data class Task(
 ) {
     constructor(problemId: Int) : this(problemId, parseImage("problems/$problemId.png"))
 
+    val bestScoreOrMax get() = (bestScore ?: Long.MAX_VALUE)
+
     val snapPoints = TreeMap<Int, TreeMap<Int, Point>>()
 
     fun addSnap(point: Point) {

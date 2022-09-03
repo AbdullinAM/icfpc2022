@@ -19,7 +19,8 @@ import java.awt.Rectangle
 class AutocropTactic(
     task: Task,
     tacticStorage: TacticStorage,
-    val colorTolerance: Int
+    val colorTolerance: Int,
+    val pixelTolerance: Double
 ) : BlockTactic(task, tacticStorage) {
     var leftBlocks = mutableSetOf<BlockId>()
 
@@ -293,7 +294,7 @@ class AutocropTactic(
             val colors = variants.map {
                 computeBlockMax(autocropState.image, it.first, it.second)
             }
-            val autocrops = colors.map { it to autocrop(autocropState.image, it, tolerance, 0.8) }
+            val autocrops = colors.map { it to autocrop(autocropState.image, it, tolerance, pixelTolerance) }
                 .filter { it.second.first != null }
                 .map { Triple(it.first, it.second.first!!, it.second.second) }
 

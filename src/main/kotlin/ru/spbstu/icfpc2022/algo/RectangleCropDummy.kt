@@ -8,6 +8,7 @@ import ru.spbstu.icfpc2022.move.Move
 class RectangleCropDummy(
     task: Task,
     val colorTolerance: Int = 17,
+    val pixelTolerance: Double = 0.95,
     val limit: Long = 5000L
 ) : Solver(task) {
     override fun solve(): PersistentState {
@@ -18,10 +19,10 @@ class RectangleCropDummy(
 
         val storage = TacticStorage()
 
-        val autocropTactic = AutocropTactic(task, storage, colorTolerance)
+        val autocropTactic = AutocropTactic(task, storage, colorTolerance, pixelTolerance)
         state = autocropTactic(state, SimpleId(0))
 
-        val rectangleCropTactic = RectangleCropTactic(task, storage, colorTolerance, limit)
+        val rectangleCropTactic = RectangleCropTactic(task, storage, colorTolerance, pixelTolerance, limit)
         for (left in autocropTactic.leftBlocks) {
             state = rectangleCropTactic(state, left)
         }

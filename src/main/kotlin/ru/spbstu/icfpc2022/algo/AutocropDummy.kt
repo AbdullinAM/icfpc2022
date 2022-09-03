@@ -7,6 +7,7 @@ import ru.spbstu.icfpc2022.move.*
 class AutocropDummy(
     task: Task,
     val colorTolerance: Int = 27,
+    val pixelTolerance: Double = 0.95,
     val limit: Long = 8000L
 ) : Solver(task) {
     override fun solve(): PersistentState {
@@ -17,7 +18,7 @@ class AutocropDummy(
 
         val storage = TacticStorage()
 
-        val autocropTactic = AutocropTactic(task, storage, colorTolerance)
+        val autocropTactic = AutocropTactic(task, storage, colorTolerance, pixelTolerance)
         state = autocropTactic(state, SimpleId(0))
 
         val previousBlocks = state.canvas.blocks.keys
