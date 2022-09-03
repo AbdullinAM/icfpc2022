@@ -45,7 +45,17 @@ tasks.getByName<Test>("test") {
     useJUnitPlatform()
 }
 
+val icfpcMainClassName = project.findProperty("mainClass") as? String ?: "ru.spbstu.icfpc2022.BruteforceKt"
 application {
-    val mainClassName = project.findProperty("mainClass") as? String ?: "ru.spbstu.icfpc2022.BruteforceKt"
-    mainClass.set(mainClassName)
+    mainClass.set(icfpcMainClassName)
+}
+
+val fatJar = task("fatJar", type = Jar::class) {
+    manifest {
+        attributes(mapOf("Main-Class" to icfpcMainClassName))
+    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    archiveBaseName.set("${archiveBaseName.get()}-jar-with-dependencies")
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+    with(tasks.jar.get() as CopySpec)
 }
