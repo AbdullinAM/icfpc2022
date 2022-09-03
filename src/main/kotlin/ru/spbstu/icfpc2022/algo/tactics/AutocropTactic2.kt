@@ -1,5 +1,6 @@
 package ru.spbstu.icfpc2022.algo.tactics
 
+import com.sksamuel.scrimage.nio.PngWriter
 import ru.spbstu.icfpc2022.algo.PersistentState
 import ru.spbstu.icfpc2022.algo.Task
 import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic.Companion.autocrop
@@ -12,6 +13,7 @@ import ru.spbstu.icfpc2022.move.ColorMove
 import ru.spbstu.icfpc2022.move.LineCutMove
 import ru.spbstu.icfpc2022.move.Orientation
 import ru.spbstu.icfpc2022.move.PointCutMove
+import java.io.File
 
 class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorTolerance: Int) :
     BlockTactic(task, tacticStorage) {
@@ -61,7 +63,10 @@ class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorToleran
             val bestCrop = autocrops.minByOrNull { it.second.size }
 
 //            val sizeLimit = task.targetImage.width * task.targetImage.height * 0.07
-            val sizeLimit = shape.size * 0.1
+            val sizeLimit = minOf(
+                shape.size * 0.15,
+                task.targetImage.width * task.targetImage.height * 0.07
+            )
 
             if (bestCrop == null || (shape.size - bestCrop.second.size) < sizeLimit) {
                 var changed = false
@@ -73,7 +78,7 @@ class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorToleran
                     pixelTolerance -= 0.01
                     changed = true
                 }
-                if (width < 100 && pixelTolerance < 0.7) {
+                if (width < 100 && pixelTolerance < 0.5) {
                     width += 10
                     tolerance = colorTolerance
                     pixelTolerance = defaultPixelTolerance
@@ -150,7 +155,7 @@ class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorToleran
                 } ?: break
             }
 
-//            bestCrop.third.flipY().forWriter(PngWriter(0)).write(File("solutions/${task.problemId}_${i++}.png"))
+            bestCrop.third.flipY().forWriter(PngWriter(0)).write(File("solutions/${task.problemId}_${i++}.png"))
 
             autocropState = AutocropTactic.Companion.AutocropState(
                 newState,
