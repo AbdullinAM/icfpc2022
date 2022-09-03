@@ -14,6 +14,7 @@ import ru.spbstu.icfpc2022.move.ColorMove
 import ru.spbstu.icfpc2022.move.LineCutMove
 import ru.spbstu.icfpc2022.move.Orientation
 import ru.spbstu.icfpc2022.move.PointCutMove
+import kotlin.random.Random
 
 class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorTolerance: Int) :
     BlockTactic(task, tacticStorage) {
@@ -41,10 +42,9 @@ class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorToleran
         )
 
         while (states.isNotEmpty()) {
-            println("states to explore -- ${states.size}")
-            println("result states -- ${resultStates.size}")
-            if (resultStates.size > 2000) break
-            val (depth, autocropState) = states.removeLast()
+            if (resultStates.size > 20000) break
+            val idx = Random.nextInt(states.size)
+            val (depth, autocropState) = states.removeAt(idx)
             if (depth > 20) {
                 continue
             }
@@ -64,7 +64,7 @@ class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorToleran
                 task.targetImage.width * task.targetImage.height * 0.07
             )
             val crops = arrayListOf<Triple<Color, Shape, ImmutableImage>>()
-            while (true) {
+            while (crops.size < 30) {
                 val variants = mutableListOf(
                     Point(0, 0) to Point(shape.width, width),
                     Point(0, 0) to Point(width, shape.height),
@@ -79,31 +79,26 @@ class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorToleran
                     .filter { it.second.first != null }
                     .map { Triple(it.first, it.second.first!!, it.second.second) }
                     .filter { (shape.size - it.second.size) > sizeLimit }
-                if (autocrops.isEmpty()) {
-                    var changed = false
-                    if (tolerance < 100) {
-                        tolerance++
-                        changed = true
-                    }
-                    if (pixelTolerance > 0) {
-                        pixelTolerance -= 0.01
-                        changed = true
-                    }
-                    if (width < 100 && pixelTolerance < 0.5) {
-                        width += 10
-                        tolerance = colorTolerance
-                        pixelTolerance = defaultPixelTolerance
-                        changed = true
-                    }
-                    if (!changed) {
-                        println("break: $tolerance $pixelTolerance $width")
-                        resultStates.add(autocropState)
-                        break
-                    }
-                    continue
+                var changed = false
+                if (tolerance < 100) {
+                    tolerance++
+                    changed = true
+                }
+                if (pixelTolerance > 0) {
+                    pixelTolerance -= 0.01
+                    changed = true
+                }
+                if (width < 100 && pixelTolerance < 0.5) {
+                    width += 10
+                    tolerance = colorTolerance
+                    pixelTolerance = defaultPixelTolerance
+                    changed = true
+                }
+                if (!changed) {
+                    println("break: $tolerance $pixelTolerance $width")
+                    break
                 }
                 crops += autocrops
-                break
             }
 
             for (bestCrop in crops) {
