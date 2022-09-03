@@ -4,10 +4,9 @@ import ru.spbstu.icfpc2022.algo.tactics.*
 import ru.spbstu.icfpc2022.canvas.*
 import ru.spbstu.icfpc2022.move.*
 
-class AutocropDummy(
+class AutocropAverageDummy(
     task: Task,
-    val colorTolerance: Int = 27,
-    val limit: Long = 8000L
+    val colorTolerance: Int = 27
 ) : Solver(task) {
     override fun solve(): List<Move> {
         var state = PersistentState(
@@ -16,21 +15,9 @@ class AutocropDummy(
         )
 
         val storage = TacticStorage()
-        state = AutocropTactic(task, storage, colorTolerance)(state, SimpleId(0))
-
-        val previousBlocks = state.canvas.blocks.keys
-        val dummyCutter = DummyCutter(
-            task,
-            storage,
-            limit,
-            colorTolerance
-        )
-        state = dummyCutter.invoke(state)
-
-        val merger = MergerTactic(task, storage)
-        state = merger(state)
-
-        val coloringBlocks = state.canvas.blocks.keys - previousBlocks
+        val cropTactic = AutocropTactic2(task, storage, colorTolerance)
+        state = cropTactic(state, SimpleId(0))
+        val coloringBlocks = listOf(cropTactic.lastUncoloredBlock)
         for (block in coloringBlocks) {
             state = ColorAverageTactic(task, storage, colorTolerance)(state, block)
         }

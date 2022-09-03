@@ -17,7 +17,8 @@ import kotlin.math.round
 
 data class Task(
     val problemId: Int,
-    val targetImage: ImmutableImage
+    val targetImage: ImmutableImage,
+    val bestScore: Long? = null
 ) {
     constructor(problemId: Int) : this(problemId, parseImage("problems/$problemId.png"))
 

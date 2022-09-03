@@ -6,6 +6,7 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import ru.spbstu.icfpc2022.algo.AutocropAverageDummy
 import ru.spbstu.icfpc2022.algo.AutocropDummy
 import ru.spbstu.icfpc2022.algo.DummyBlockAverager
 import ru.spbstu.icfpc2022.algo.Task
@@ -37,7 +38,8 @@ data class Submission(
     val problem_id: Int,
     val submitted_at: String,
     val status: String,
-    val score: Int
+    val score: Long,
+    val error: String
 )
 
 data class Submissions(val submissions: List<Submission>)
@@ -86,13 +88,22 @@ fun submit(problemId: Int, code: String) {
     client.newCall(request).execute().also { println(it.body?.string()) }
 }
 
+private fun Submissions.bestSubmissions() = submissions
+    .groupBy { it.problem_id }
+    .mapValues { (_, subs) -> subs.filter { it.status == "SUCCEEDED" }  }
+    .mapValues { (_, subs) -> subs.minByOrNull { it.score } }
+
 fun main() = try {
     val problems = getProblems()
-    downloadProblems(problems)
+    val submissions = submissions()
+    val bestSubmissions = submissions.bestSubmissions()
+
+//    downloadProblems(problems)
     for (problem in problems.problems) {
         val im = parseImage(URL(problem.target_link))
 
-        val task = Task(problem.id, im)
+        val bestScore = bestSubmissions[problem.id]?.score
+        val task = Task(problem.id, im, bestScore = bestScore)
         val autocropDummy = AutocropDummy(task)
         val solution = autocropDummy.solve()
         submit(problem.id, solution.joinToString("\n"))

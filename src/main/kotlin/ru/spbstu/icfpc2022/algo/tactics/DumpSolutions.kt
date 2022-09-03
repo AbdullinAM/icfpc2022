@@ -11,7 +11,9 @@ class DumpSolutions(task: Task, tacticStorage: TacticStorage): Tactic(task, tact
         File("solutions/").mkdirs()
         state.canvas.toImage().flipY().forWriter(PngWriter(0)).write(File("solutions/${task.problemId}.png"))
         println("Task#${task.problemId}")
-        println(state.score)
+        val score = state.score
+        val isBetter = task.bestScore == null || task.bestScore > score
+        println("$score | ${if (isBetter) "better" else "worse"} | current ${task.bestScore}")
         return state
     }
 

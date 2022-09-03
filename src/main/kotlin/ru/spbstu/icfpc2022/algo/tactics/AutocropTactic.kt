@@ -2,24 +2,25 @@ package ru.spbstu.icfpc2022.algo.tactics
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.color.RGBColor
-import com.sksamuel.scrimage.nio.PngWriter
 import com.sksamuel.scrimage.pixels.Pixel
 import com.sksamuel.scrimage.pixels.PixelsExtractor
 import ru.spbstu.icfpc2022.algo.PersistentState
 import ru.spbstu.icfpc2022.algo.Task
-import ru.spbstu.icfpc2022.canvas.*
-import ru.spbstu.icfpc2022.imageParser.*
+import ru.spbstu.icfpc2022.canvas.BlockId
+import ru.spbstu.icfpc2022.canvas.Color
+import ru.spbstu.icfpc2022.canvas.Point
+import ru.spbstu.icfpc2022.canvas.Shape
+import ru.spbstu.icfpc2022.canvas.SimpleId
+import ru.spbstu.icfpc2022.imageParser.get
+import ru.spbstu.icfpc2022.imageParser.subimage
+import ru.spbstu.icfpc2022.imageParser.toAwt
 import ru.spbstu.icfpc2022.move.ColorMove
 import ru.spbstu.icfpc2022.move.LineCutMove
 import ru.spbstu.icfpc2022.move.Orientation
 import ru.spbstu.icfpc2022.move.PointCutMove
 import java.awt.Rectangle
-import java.io.File
 
 class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorTolerance: Int) : BlockTactic(task, tacticStorage) {
-
-    val defaultPixelTolerance = 0.95
-    val defaultWidth = 10
 
     companion object {
 
@@ -246,7 +247,7 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                     pixelTolerance
                 )
             return when {
-                x1 == 0 && y1 == 0 && x2 == image.width - 1 && y2 == image.height - 1 -> null to image
+                x1 == 0 && y1 == 0 && x2 == image.width && y2 == image.height -> null to image
                 x2 <= x1 || y2 <= y1 -> null to image
                 else -> Shape(Point(x1, y1), Point(x2, y2)) to image.subimage(
                     x1,
@@ -257,46 +258,12 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
             }
         }
 
-        private fun computeMaxColor(image: ImmutableImage, start: Point, end: Point): Color {
-            val colors = mutableMapOf<Color, Int>()
-            for (x in start.x until end.x) {
-                for (y in start.y until end.y) {
-                    val pixel = image[x, y]
-                    val col = pixel.getCanvasColor()
-                    colors[col] = colors.getOrDefault(col, 0) + 1
-                }
-            }
-            return colors.maxBy { it.value }.key
-        }
-
-        private fun computeAvgColor(image: ImmutableImage, start: Point, end: Point): Color {
-            var r = 0L
-            var g = 0L
-            var b = 0L
-            var a = 0L
-            var count = 0
-            for (x in start.x until end.x) {
-                for (y in start.y until end.y) {
-                    val pixel = image[x, y]
-                    val col = pixel.getCanvasColor()
-                    count++
-                    a += col.a.toLong()
-                    r += col.r.toLong()
-                    b += col.b.toLong()
-                    g += col.g.toLong()
-                }
-            }
-            return Color((r / count).toInt(), (g / count).toInt(), (b / count).toInt(), (a / count).toInt())
-        }
-
         data class AutocropState(
             val state: PersistentState,
             val image: ImmutableImage,
             val block: BlockId
         )
     }
-
-    lateinit var lastUncoloredBlock: BlockId
 
     override fun invoke(state: PersistentState, blockId: BlockId): PersistentState {
         val cropBlock = state.canvas.blocks[blockId]!!
@@ -305,17 +272,11 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
             task.targetImage.subimage(cropBlock.shape),
             SimpleId(0)
         )
-        var i = 1
-
-        var tolerance = colorTolerance
-        var pixelTolerance = defaultPixelTolerance
-        var width = defaultWidth
 
         while (true) {
+            val width = 10
+            val tolerance = colorTolerance
             val shape = autocropState.state.canvas.blocks[autocropState.block]!!.shape
-
-            if (shape.size < 40 * 40) break
-
             val variants = mutableListOf(
                 Point(0, 0) to Point(shape.width, width.coerceAtMost(shape.height)),
                 Point(0, 0) to Point(width.coerceAtMost(shape.width), shape.height),
@@ -324,39 +285,15 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
             )
 
             val colors = variants.map {
-                computeAvgColor(autocropState.image, it.first, it.second)
+                computeBlockMax(autocropState.image, it.first, it.second)
             }
-            val autocrops = colors.map { it to autocrop(autocropState.image, it, tolerance, pixelTolerance) }
+            val autocrops = colors.map { it to autocrop(autocropState.image, it, tolerance, 0.8) }
                 .filter { it.second.first != null }
                 .map { Triple(it.first, it.second.first!!, it.second.second) }
 
             val bestCrop = autocrops.minByOrNull { it.second.size }
 
-            if (bestCrop == null || (shape.size - bestCrop.second.size) < (shape.size * 0.1)) {
-                var changed = false
-                if (tolerance < 255) {
-                    tolerance++
-                    changed = true
-                }
-                if (pixelTolerance > 0) {
-                    pixelTolerance -= 0.01
-                    changed = true
-                }
-                if (width < 100 && pixelTolerance < 0.7) {
-                    width += 10
-                    tolerance = colorTolerance
-                    pixelTolerance = defaultPixelTolerance
-                    changed = true
-                }
-                if (!changed) {
-                    println("break: $tolerance $pixelTolerance $width")
-                    break
-                }
-                continue
-            }
-            tolerance = colorTolerance
-            pixelTolerance = defaultPixelTolerance
-            width = defaultWidth
+            if (bestCrop == null) break
 
             val colorMove = ColorMove(autocropState.block, bestCrop.first)
             var newState = autocropState.state.move(colorMove)
@@ -403,7 +340,6 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                 } ?: break
             }
 
-//            bestCrop.third.flipY().forWriter(PngWriter(0)).write(File("solutions/${task.problemId}_${i++}.png"))
 
             autocropState = AutocropState(
                 newState,
@@ -411,7 +347,6 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                 nextBlock,
             )
         }
-        lastUncoloredBlock = autocropState.block
         return autocropState.state
     }
 }
