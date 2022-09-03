@@ -87,7 +87,7 @@ fun submit(problemId: Int, code: String) {
 
 fun Submissions.bestSubmissions() = submissions
     .groupBy { it.problem_id }
-    .mapValues { (_, subs) -> subs.filter { it.status == "SUCCEEDED" }  }
+    .mapValues { (_, subs) -> subs.filter { it.status == "SUCCEEDED" } }
     .mapValues { (_, subs) -> subs.minByOrNull { it.score } }
 
 fun shutdownClient() = client.connectionPool.evictAll()
