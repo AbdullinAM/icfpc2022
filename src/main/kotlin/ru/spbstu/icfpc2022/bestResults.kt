@@ -6,7 +6,7 @@ fun main() = try {
     val bestSubmissions = submissions.bestSubmissions()
 
 //    downloadProblems(problems)
-    for (problem in problems.problems) {
+    for (problem in problems) {
         val bestScore = bestSubmissions[problem.id]?.score
         println("Task#${problem.id}: $bestScore")
     }

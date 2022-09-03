@@ -12,8 +12,8 @@ fun main() {
 
     val taskId = 1
 
-    val problem = problems.problems.first { it.id == taskId }
-    val im = parseImage(URL(problem.target_link))
+    val problem = problems.first { it.id == taskId }
+    val im = problem.target
     val bestScore = bestSubmissions[problem.id]?.score
     var task = Task(problem.id, im, bestScore = bestScore)
     for (colorTolerance in 0..50) {
