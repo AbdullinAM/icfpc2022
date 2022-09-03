@@ -33,7 +33,7 @@ class RectangleCropTactic(
 
     private fun tryLowerLeft(currentBlock: Block): Triple<Point, Point, Shape>? {
         val cropBase = currentBlock.shape.lowerLeftInclusive
-        var cropPoint = cropBase
+        var cropPoint = cropBase + Point(1, 1)
         var averageColor: Color
 
         val mutations = mutableListOf(Point(0, 1), Point(1, 0))
