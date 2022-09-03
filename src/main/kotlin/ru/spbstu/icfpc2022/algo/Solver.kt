@@ -63,11 +63,9 @@ class PersistentState(
     val commands: PersistentList<Move> = persistentListOf(),
     val cost: Long = 0L
 ) {
-    val similarity: Double
-        get() = score(canvas, task.targetImage)
+    val similarity: Double by lazy { score(canvas, task.targetImage) }
 
-    val score: Long
-        get() = round(similarity * 0.005).toLong() + cost
+    val score: Long by lazy { round(similarity * 0.005).toLong() + cost }
 
     fun move(move: Move): PersistentState {
         val newCost = cost + canvas.costOf(move)
@@ -89,5 +87,5 @@ fun PersistentState(problemId: Int): PersistentState {
 abstract class Solver(
     val task: Task
 ) {
-    abstract fun solve(): List<Move>
+    abstract fun solve(): PersistentState
 }

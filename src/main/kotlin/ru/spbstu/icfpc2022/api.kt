@@ -6,10 +6,7 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import ru.spbstu.icfpc2022.algo.AutocropAverageDummy
-import ru.spbstu.icfpc2022.algo.AutocropDummy
-import ru.spbstu.icfpc2022.algo.DummyBlockAverager
-import ru.spbstu.icfpc2022.algo.Task
+import ru.spbstu.icfpc2022.algo.*
 import ru.spbstu.icfpc2022.imageParser.parseImage
 import java.net.URL
 import kotlin.io.path.Path
@@ -104,9 +101,11 @@ fun main() = try {
 
         val bestScore = bestSubmissions[problem.id]?.score
         val task = Task(problem.id, im, bestScore = bestScore)
-        val autocropDummy = AutocropDummy(task)
-        val solution = autocropDummy.solve()
-        submit(problem.id, solution.joinToString("\n"))
+        val rectangleCropDummy = RectangleCropDummy(task)
+        val solution = rectangleCropDummy.solve()
+        if (solution.score < (bestScore ?: Long.MAX_VALUE)) {
+            submit(problem.id, solution.commands.joinToString("\n"))
+        }
     }
 } finally {
     client.connectionPool.evictAll()

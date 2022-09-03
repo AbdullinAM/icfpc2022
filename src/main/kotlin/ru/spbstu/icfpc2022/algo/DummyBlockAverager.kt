@@ -19,7 +19,7 @@ class DummyBlockAverager(
     val limit: Long
 ) : Solver(task) {
 
-    override fun solve(): List<Move> {
+    override fun solve(): PersistentState {
         var state = PersistentState(task)
         val tacticStorage = TacticStorage()
 
@@ -30,6 +30,6 @@ class DummyBlockAverager(
         state = ColorAverageTactic(task, tacticStorage)(state)
         val dumper = DumpSolutions(task, tacticStorage)
         dumper(state)
-        return state.commands
+        return state
     }
 }

@@ -7,10 +7,10 @@ import ru.spbstu.icfpc2022.move.Move
 
 class RectangleCropDummy(
     task: Task,
-    val colorTolerance: Int = 27,
+    val colorTolerance: Int = 17,
     val limit: Long = 5000L
 ) : Solver(task) {
-    override fun solve(): List<Move> {
+    override fun solve(): PersistentState {
         var state = PersistentState(
             task,
             Canvas.empty(task.targetImage.width, task.targetImage.height)
@@ -48,6 +48,6 @@ class RectangleCropDummy(
         val dumper = DumpSolutions(task, storage)
         dumper(state)
 
-        return state.commands
+        return state
     }
 }

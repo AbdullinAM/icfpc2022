@@ -31,7 +31,8 @@ class RectangleCropTactic(
     }
 
     private fun tryLowerLeft(currentBlock: Block): Triple<Point, Point, Shape>? {
-        var cropPoint = currentBlock.shape.lowerLeft
+        val cropBase = currentBlock.shape.lowerLeft
+        var cropPoint = cropBase
         var averageColor: Color
 
         val mutations = mutableListOf(Point(0, 1), Point(1, 0))
@@ -52,15 +53,16 @@ class RectangleCropTactic(
             }
             if (!succeded) break
         }
-        val cropShape = Shape(currentBlock.shape.lowerLeft, cropPoint)
+        val cropShape = Shape(cropBase, cropPoint)
         return when {
             cropShape.size < limit -> null
-            else -> Triple(cropPoint, currentBlock.shape.lowerLeft, cropShape)
+            else -> Triple(cropPoint, cropBase, cropShape)
         }
     }
 
     private fun tryUpperLeft(currentBlock: Block): Triple<Point, Point, Shape>? {
-        var cropPoint = currentBlock.shape.upperLeft
+        val cropBase = currentBlock.shape.upperLeft
+        var cropPoint = cropBase
         var averageColor: Color
 
         val mutations = mutableListOf(Point(0, -1), Point(1, 0))
@@ -81,15 +83,16 @@ class RectangleCropTactic(
             }
             if (!succeded) break
         }
-        val cropShape = Shape(currentBlock.shape.lowerLeft, cropPoint)
+        val cropShape = Shape(cropBase, cropPoint)
         return when {
             cropShape.size < limit -> null
-            else -> Triple(cropPoint, currentBlock.shape.upperLeft, cropShape)
+            else -> Triple(cropPoint, cropBase, cropShape)
         }
     }
 
     private fun tryUpperRight(currentBlock: Block): Triple<Point, Point, Shape>? {
-        var cropPoint = currentBlock.shape.upperRight
+        val cropBase = currentBlock.shape.upperRight
+        var cropPoint = cropBase
         var averageColor: Color
 
         val mutations = mutableListOf(Point(0, -1), Point(-1, 0))
@@ -110,15 +113,16 @@ class RectangleCropTactic(
             }
             if (!succeded) break
         }
-        val cropShape = Shape(currentBlock.shape.lowerLeft, cropPoint)
+        val cropShape = Shape(cropBase, cropPoint)
         return when {
             cropShape.size < limit -> null
-            else -> Triple(cropPoint, currentBlock.shape.upperRight, cropShape)
+            else -> Triple(cropPoint, cropBase, cropShape)
         }
     }
 
     private fun tryLowerRight(currentBlock: Block): Triple<Point, Point, Shape>? {
-        var cropPoint = currentBlock.shape.lowerRight
+        val cropBase = currentBlock.shape.lowerRight
+        var cropPoint = cropBase
         var averageColor: Color
 
         val mutations = mutableListOf(Point(0, 1), Point(-1, 0))
@@ -139,10 +143,10 @@ class RectangleCropTactic(
             }
             if (!succeded) break
         }
-        val cropShape = Shape(currentBlock.shape.lowerLeft, cropPoint)
+        val cropShape = Shape(cropBase, cropPoint)
         return when {
             cropShape.size < limit -> null
-            else -> Triple(cropPoint, currentBlock.shape.lowerRight, cropShape)
+            else -> Triple(cropPoint, cropBase, cropShape)
         }
     }
 

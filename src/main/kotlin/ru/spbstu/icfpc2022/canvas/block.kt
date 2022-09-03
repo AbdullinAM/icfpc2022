@@ -432,7 +432,7 @@ data class Canvas(
                     return@forEach
                 }
                 // Case 5
-                if (point.isInside(subBlock.shape.lowerLeft, subBlock.shape.upperRight)) {
+                if (point.isStrictlyInside(subBlock.shape.lowerLeft, subBlock.shape.upperRight)) {
                     bottomLeftBlocks.add(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 0), bottomLeftBlocks.size),
@@ -473,7 +473,7 @@ data class Canvas(
                 // Case 2
                 if (subBlock.shape.lowerLeft.x <= point.x
                     && point.x <= subBlock.shape.upperRight.x
-                    && point.y < subBlock.shape.lowerLeft.y
+                    && point.y <= subBlock.shape.lowerLeft.y
                 ) {
                     topLeftBlocks.add(
                         SimpleBlock(
@@ -500,7 +500,7 @@ data class Canvas(
                 // Case 8
                 if (subBlock.shape.lowerLeft.x <= point.x
                     && point.x <= subBlock.shape.upperRight.x
-                    && point.y > subBlock.shape.upperRight.y
+                    && point.y >= subBlock.shape.upperRight.y
                 ) {
                     bottomLeftBlocks.add(
                         SimpleBlock(
@@ -527,7 +527,7 @@ data class Canvas(
                 // Case 4
                 if (subBlock.shape.lowerLeft.y <= point.y
                     && point.y <= subBlock.shape.upperRight.y
-                    && point.x < subBlock.shape.lowerLeft.x
+                    && point.x <= subBlock.shape.lowerLeft.x
                 ) {
                     bottomRightBlocks.add(
                         SimpleBlock(
@@ -554,7 +554,7 @@ data class Canvas(
                 // Case 6
                 if (subBlock.shape.lowerLeft.y <= point.y
                     && point.y <= subBlock.shape.upperRight.y
-                    && point.x > subBlock.shape.upperRight.x
+                    && point.x >= subBlock.shape.upperRight.x
                 ) {
                     bottomLeftBlocks.add(
                         SimpleBlock(
