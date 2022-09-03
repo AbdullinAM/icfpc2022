@@ -23,7 +23,8 @@ class RobovinchiView : View() {
         val rectangles = mutableListOf<Rectangle>()
         for (block in blocks.second) {
             val xCoor = block.shape.upperLeft.x.toDouble()
-            val yCoor = block.shape.lowerRight.y.toDouble()
+            //val yCoor = block.shape.lowerRight.y.toDouble()
+            val yCoor = StateCollector.canvasHeight - block.shape.upperRight.y.toDouble()
             val width = block.shape.width.toDouble()
             val height = block.shape.height.toDouble()
             val rectangle = Rectangle(xCoor, yCoor, width, height).apply {
