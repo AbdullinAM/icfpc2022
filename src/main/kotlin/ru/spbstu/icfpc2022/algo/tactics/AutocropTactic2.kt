@@ -3,6 +3,7 @@ package ru.spbstu.icfpc2022.algo.tactics
 import com.sksamuel.scrimage.ImmutableImage
 import ru.spbstu.icfpc2022.algo.PersistentState
 import ru.spbstu.icfpc2022.algo.Task
+import ru.spbstu.icfpc2022.algo.initialState
 import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic.Companion.autocrop
 import ru.spbstu.icfpc2022.canvas.BlockId
 import ru.spbstu.icfpc2022.canvas.Color
@@ -175,6 +176,6 @@ class AutocropTactic2(task: Task, tacticStorage: TacticStorage, val colorToleran
             }
         }
         finalStates = resultStates.map { it.block to it.state }
-        return PersistentState(task.problemId)
+        return task.initialState
     }
 }
