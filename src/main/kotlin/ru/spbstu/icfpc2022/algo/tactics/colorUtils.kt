@@ -84,6 +84,18 @@ fun computeBlockMedian(image: ImmutableImage, shape: Shape): Color {
     )
 }
 
+fun computeBlockMax(image: ImmutableImage, shape: Shape): Color {
+    val colors = mutableMapOf<Color, Int>()
+    for (x in shape.lowerLeftInclusive.x until shape.upperRightExclusive.x) {
+        for (y in shape.lowerLeftInclusive.y until shape.upperRightExclusive.y) {
+            val pixel = image[x, y]
+            val col = pixel.getCanvasColor()
+            colors[col] = colors.getOrDefault(col, 0) + 1
+        }
+    }
+    return colors.maxBy { it.value }.key
+}
+
 fun computeBlockMax(image: ImmutableImage, start: Point, end: Point): Color {
     val colors = mutableMapOf<Color, Int>()
     for (x in start.x until end.x) {

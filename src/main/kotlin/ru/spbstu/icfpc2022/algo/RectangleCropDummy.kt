@@ -4,13 +4,15 @@ import ru.spbstu.icfpc2022.algo.tactics.*
 import ru.spbstu.icfpc2022.canvas.SimpleId
 
 enum class CuttingTactic { DUMB, DUMBSNAP, EXHAUSTIVE }
+enum class ColoringMethod { AVERAGE, MEDIAN, MAX }
 
 class RectangleCropDummy(
     task: Task,
     val colorTolerance: Int = 17,
     val pixelTolerance: Double = 0.95,
     val limit: Long = 5000L,
-    val cuttingTactic: CuttingTactic = CuttingTactic.DUMB
+    val cuttingTactic: CuttingTactic = CuttingTactic.DUMB,
+    val coloringMethod: ColoringMethod = ColoringMethod.AVERAGE
 ) : Solver(task) {
     override fun solve(): PersistentState {
         var state = task.initialState
@@ -20,6 +22,8 @@ class RectangleCropDummy(
         val mergeToOneTactic = MergeToOneTactic(task, storage)
         state = mergeToOneTactic(state)
 
+        val colorBackgroundTactic = ColorBackgroundTactic(task, storage)
+        state = colorBackgroundTactic(state)
 
         val autocropTactic = AutocropTactic(task, storage, colorTolerance, pixelTolerance)
         state = autocropTactic(state, SimpleId(state.canvas.blockId))
@@ -51,7 +55,7 @@ class RectangleCropDummy(
 
         val coloringBlocks = state.canvas.blocks.keys - previousBlocks
         for (block in coloringBlocks) {
-            state = ColorAverageTactic(task, storage, colorTolerance)(state, block)
+            state = ColorAverageTactic(task, storage, colorTolerance, coloringMethod)(state, block)
         }
 
         return state

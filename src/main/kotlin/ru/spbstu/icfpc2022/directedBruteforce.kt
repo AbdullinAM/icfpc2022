@@ -1,10 +1,7 @@
 package ru.spbstu.icfpc2022
 
 import kotlinx.coroutines.*
-import ru.spbstu.icfpc2022.algo.AutocropDummy
-import ru.spbstu.icfpc2022.algo.CuttingTactic
-import ru.spbstu.icfpc2022.algo.RectangleCropDummy
-import ru.spbstu.icfpc2022.algo.Task
+import ru.spbstu.icfpc2022.algo.*
 import ru.spbstu.icfpc2022.imageParser.parseImage
 import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import java.net.URL
@@ -15,6 +12,7 @@ data class Parameters(
     val colorTolerance: Int = 25,
     val pixelTolerance: Int = 15,
     val limit: Int = 7500,
+    val coloringMethod: ColoringMethod = ColoringMethod.AVERAGE
 ) {
     fun neighbours(): Collection<Parameters> = setOf(
         copy(colorTolerance = colorTolerance + 2),
@@ -23,7 +21,7 @@ data class Parameters(
         copy(pixelTolerance = (pixelTolerance - 1).coerceAtLeast(0)),
         copy(limit = limit + 500),
         copy(limit = (limit - 500).coerceAtLeast(0)),
-    )
+    ) + ColoringMethod.values().filter { it != coloringMethod }.map { copy(coloringMethod = it) }
 }
 
 fun main(args: Array<String>) {
@@ -72,7 +70,8 @@ fun main(args: Array<String>) {
                                         colorTolerance,
                                         pixelTolerance * 0.05,
                                         limit.toLong(),
-                                        cuttingTactic
+                                        cuttingTactic,
+                                        it.coloringMethod
                                     )
                                     val solution = rectangleCropDummy.solve()
                                     if (solution.score < task.bestScoreOrMax) {
@@ -82,9 +81,10 @@ fun main(args: Array<String>) {
                                     it to solution.score
                                 } catch (e: Throwable) {
                                     System.err.println("Failed with parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cuttingTactic")
+                                    e.printStackTrace()
                                     it to Long.MAX_VALUE
                                 }
-                            }.groupBy { it.second }.minBy { it.key }.value
+                            }.groupBy { it.second }.minByOrNull { it.key }?.value.orEmpty()
 
                             for ((neighbour, score) in top3) {
                                 if (score <= currentScore) {

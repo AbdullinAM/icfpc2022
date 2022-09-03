@@ -5,6 +5,7 @@ import com.sksamuel.scrimage.pixels.Pixel
 import ru.spbstu.icfpc2022.algo.PersistentState
 import ru.spbstu.icfpc2022.algo.Task
 import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic.Companion.approx
+import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic.Companion.approximatelyMatches
 import ru.spbstu.icfpc2022.canvas.*
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.move.ColorMove
@@ -14,7 +15,7 @@ import ru.spbstu.icfpc2022.move.PointCutMove
 
 class RectangleCropTactic(
     task: Task,
-    tacticStorage: TacticStorage,
+    val tacticStorage: TacticStorage,
     val colorTolerance: Int,
     val pixelTolerance: Double,
     val limit: Long
@@ -223,9 +224,14 @@ class RectangleCropTactic(
                     b.shape.lowerLeftInclusive == currentBlock.shape.lowerLeftInclusive
                 }
 
+                val backgroundColor = tacticStorage.get<ColorBackgroundTactic>()?.resultingColor
                 val averageColor = computeBlockAverage(task.targetImage, cropShape)
-                val colorMove = ColorMove(coloringBlock, averageColor)
-                state = newState.move(colorMove)
+
+                state = when {
+                    backgroundColor != null
+                            && approximatelyMatches(backgroundColor, averageColor, colorTolerance) -> newState
+                    else -> newState.move(ColorMove(coloringBlock, averageColor))
+                }
 
                 queue.addAll(createdBlocks - coloringBlock)
                 continue@upperLoop

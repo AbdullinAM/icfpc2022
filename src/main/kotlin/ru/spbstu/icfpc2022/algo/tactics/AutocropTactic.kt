@@ -18,11 +18,13 @@ import java.awt.Rectangle
 
 class AutocropTactic(
     task: Task,
-    tacticStorage: TacticStorage,
+    val tacticStorage: TacticStorage,
     val colorTolerance: Int,
     val pixelTolerance: Double
 ) : BlockTactic(task, tacticStorage) {
     var leftBlocks = mutableSetOf<BlockId>()
+
+    val backgroundTactic: ColorBackgroundTactic? get() = tacticStorage.get()
 
     companion object {
 
@@ -313,8 +315,14 @@ class AutocropTactic(
             )
 
             val bestCropAverage = computeNotBlockAverage(autocropState.image, newBlockShape)
-            val colorMove = ColorMove(autocropState.block, bestCropAverage)
-            var newState = autocropState.state.move(colorMove)
+
+            val bgColor = backgroundTactic?.resultingColor
+
+            var newState = when {
+                bgColor != null && approximatelyMatches(bgColor, bestCropAverage, colorTolerance) ->
+                    autocropState.state
+                else -> autocropState.state.move(ColorMove(autocropState.block, bestCropAverage))
+            }
 
             var nextBlock = autocropState.block
 
