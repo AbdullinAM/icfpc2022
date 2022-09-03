@@ -22,6 +22,7 @@ data class Task(
     val bestScore: Long? = null
 ) {
     constructor(problemId: Int) : this(problemId, parseImage("problems/$problemId.png"))
+    constructor(problemId: Int, bestScore: Long?) : this(problemId, parseImage("problems/$problemId.png"), bestScore)
 
     val bestScoreOrMax get() = (bestScore ?: Long.MAX_VALUE)
 
@@ -73,7 +74,7 @@ class PersistentState(
         val newCost = cost + canvas.costOf(move)
         val newCanvas = canvas.apply(move)
         return PersistentState(task, newCanvas, commands.add(move), newCost)
-            .also { StateCollector.commandToCanvas.add(move to newCanvas.allSimpleBlocks().toList()) }
+            //.also { StateCollector.commandToCanvas.add(move to newCanvas.allSimpleBlocks().toList()) }
     }
 
     fun dumpSolution(): String = commands.joinToString("\n")

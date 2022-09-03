@@ -22,6 +22,8 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+
+    implementation("com.google.code.gson:gson:2.9.1")
     implementation("ru.spbstu:jackson-module-ktuples:0.0.0.6")
     implementation("ru.spbstu:kotlin-wheels-jvm:0.0.1.5")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3")
