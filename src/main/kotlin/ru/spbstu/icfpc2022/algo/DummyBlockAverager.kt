@@ -28,8 +28,6 @@ class DummyBlockAverager(
         val cutter = DummyCutter(task, tacticStorage, limit, 17)
         state = cutter(state)
         state = ColorAverageTactic(task, tacticStorage)(state)
-        val dumper = DumpSolutions(task, tacticStorage)
-        dumper(state)
         return state
     }
 }

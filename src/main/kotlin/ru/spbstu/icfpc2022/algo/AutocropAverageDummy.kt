@@ -32,8 +32,6 @@ class AutocropAverageDummy(
                 bestState = state
             }
         }
-        val dumper = DumpSolutions(task, storage)
-        dumper(bestState)
 
         return bestState
     }
