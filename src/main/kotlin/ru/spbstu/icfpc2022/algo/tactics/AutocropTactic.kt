@@ -272,6 +272,11 @@ class AutocropTactic(
         )
     }
 
+    fun Point.fitInto(shape: Shape) = Point(
+        x.coerceAtLeast(0).coerceAtMost(shape.width - 1),
+        y.coerceAtLeast(0).coerceAtMost(shape.height - 1),
+    )
+
     override fun invoke(state: PersistentState, blockId: BlockId): PersistentState {
         val cropBlock = state.canvas.blocks[blockId]!!
         var autocropState = AutocropState(
@@ -289,7 +294,7 @@ class AutocropTactic(
                 Point(0, 0) to Point(width, shape.height),
                 Point(0, shape.height - width) to Point(shape.width, shape.height),
                 Point(shape.width - width, 0) to Point(shape.width, shape.height),
-            )
+            ).map { (p1, p2) -> p1.fitInto(shape) to p2.fitInto(shape) }
 
             val colors = variants.map {
                 computeBlockMax(autocropState.image, it.first, it.second)
@@ -303,8 +308,8 @@ class AutocropTactic(
             val bestCrop = autocrops.minBy { it.second.size }
 
             val newBlockShape = Shape(
-                bestCrop.second.lowerLeft.add(shape.lowerLeft),
-                bestCrop.second.upperRight.add(shape.lowerLeft),
+                bestCrop.second.lowerLeftInclusive.add(shape.lowerLeftInclusive),
+                bestCrop.second.upperRightExclusive.add(shape.lowerLeftInclusive),
             )
 
             val bestCropAverage = computeNotBlockAverage(autocropState.image, newBlockShape)
@@ -313,55 +318,55 @@ class AutocropTactic(
 
             var nextBlock = autocropState.block
 
-            if (newBlockShape.lowerLeft != shape.lowerLeft) {
+            if (newBlockShape.lowerLeftInclusive != shape.lowerLeftInclusive) {
                 val firstCrop = when {
-                    newBlockShape.lowerLeft.x == shape.lowerLeft.x -> LineCutMove(
+                    newBlockShape.lowerLeftInclusive.x == shape.lowerLeftInclusive.x -> LineCutMove(
                         nextBlock,
                         Orientation.Y,
-                        newBlockShape.lowerLeft.y
+                        newBlockShape.lowerLeftInclusive.y
                     )
 
-                    newBlockShape.lowerLeft.y == shape.lowerLeft.y -> LineCutMove(
+                    newBlockShape.lowerLeftInclusive.y == shape.lowerLeftInclusive.y -> LineCutMove(
                         nextBlock,
                         Orientation.X,
-                        newBlockShape.lowerLeft.x
+                        newBlockShape.lowerLeftInclusive.x
                     )
 
-                    else -> PointCutMove(nextBlock, newBlockShape.lowerLeft)
+                    else -> PointCutMove(nextBlock, newBlockShape.lowerLeftInclusive)
                 }
                 newState = newState.move(firstCrop)
 
                 nextBlock = newState.canvas.blocks.toList().firstOrNull {
                     newBlockShape.middle.isStrictlyInside(
-                        it.second.shape.lowerLeft,
-                        it.second.shape.upperRight
+                        it.second.shape.lowerLeftInclusive,
+                        it.second.shape.upperRightExclusive
                     )
                 }?.first.also {
                     if (it == null) System.err.println("cut failed")
                 } ?: break
             }
 
-            if (newBlockShape.upperRight != shape.upperRight) {
+            if (newBlockShape.upperRightExclusive != shape.upperRightExclusive) {
                 val secondCrop = when {
-                    newBlockShape.upperRight.x == shape.upperRight.x -> LineCutMove(
+                    newBlockShape.upperRightExclusive.x == shape.upperRightExclusive.x -> LineCutMove(
                         nextBlock,
                         Orientation.Y,
-                        newBlockShape.upperRight.y
+                        newBlockShape.upperRightExclusive.y - 1
                     )
 
-                    newBlockShape.upperRight.y == shape.upperRight.y -> LineCutMove(
+                    newBlockShape.upperRightExclusive.y == shape.upperRightExclusive.y -> LineCutMove(
                         nextBlock,
                         Orientation.X,
-                        newBlockShape.upperRight.x
+                        newBlockShape.upperRightExclusive.x - 1
                     )
 
-                    else -> PointCutMove(nextBlock, newBlockShape.upperRight)
+                    else -> PointCutMove(nextBlock, newBlockShape.upperRightExclusive - Point(1, 1))
                 }
                 newState = newState.move(secondCrop)
                 nextBlock = newState.canvas.blocks.toList().firstOrNull {
                     newBlockShape.middle.isStrictlyInside(
-                        it.second.shape.lowerLeft,
-                        it.second.shape.upperRight
+                        it.second.shape.lowerLeftInclusive,
+                        it.second.shape.upperRightExclusive
                     )
                 }?.first.also {
                     if (it == null) System.err.println("cut failed")

@@ -22,23 +22,21 @@ fun ImmutableImage.getOrNull(x: Int, y: Int): Pixel? = when {
     else -> pixel(x, y)
 }
 
-fun ImmutableImage.subimage(shape: Shape): ImmutableImage = subimage(shape.lowerLeft.x, shape.lowerLeft.y, shape.width, shape.height)
+fun ImmutableImage.subimage(shape: Shape): ImmutableImage = subimage(shape.lowerLeftInclusive.x, shape.lowerLeftInclusive.y, shape.width, shape.height)
 
-fun Color.toAwt() = java.awt.Color(r.toInt(), g.toInt(), b.toInt(), a.toInt())
+fun Color.toAwt() = java.awt.Color(r, g, b, a)
 
 fun Canvas.toImage(): ImmutableImage {
     var image = ImmutableImage.create(width, height)
     for (block in this.allSimpleBlocks()) {
-        val w = block.shape.width + if (block.shape.upperRight.x == width - 1) 1 else 0
-        val h = block.shape.height + if (block.shape.upperRight.y == height - 1) 1 else 0
         image = image.overlay(
             ImmutableImage.filled(
-                w,
-                h,
+                block.shape.width,
+                block.shape.height,
                 block.color.toAwt()
             ),
-            block.shape.lowerLeft.x,
-            block.shape.lowerLeft.y
+            block.shape.lowerLeftInclusive.x,
+            block.shape.lowerLeftInclusive.y
         )
     }
     return image

@@ -33,9 +33,6 @@ data class Point(
                 && bottomLeft.y < y
                 && y < topRight.y
 
-
-    fun isStrictlyInside(shape: Shape): Boolean = isStrictlyInside(shape.lowerLeft, shape.upperRight)
-
     fun isOnBoundary(bottomLeft: Point, topRight: Point): Boolean =
         (bottomLeft.x == x && bottomLeft.y <= y && y <= topRight.y)
                 || (topRight.x == x && bottomLeft.y <= y && y <= topRight.y)
@@ -44,8 +41,6 @@ data class Point(
 
     fun isInside(bottomLeft: Point, topRight: Point): Boolean =
         isStrictlyInside(bottomLeft, topRight) || isOnBoundary(bottomLeft, topRight)
-
-    fun isInside(shape: Shape): Boolean = isInside(shape.lowerLeft, shape.upperRight)
 }
 
 data class Color(
@@ -58,20 +53,28 @@ data class Color(
 }
 
 data class Shape(
-    val lowerLeft: Point,
-    val upperRight: Point
+    val lowerLeftInclusive: Point,
+    val upperRightExclusive: Point
 ) {
-    val upperLeft: Point = Point(lowerLeft.x, upperRight.y)
-    val lowerRight: Point = Point(upperRight.x, lowerLeft.y)
-
-    val width: Int get() = upperRight.x - lowerLeft.x
-    val height: Int get() = upperRight.y - lowerLeft.y
+    val width: Int get() = upperRightExclusive.x - lowerLeftInclusive.x
+    val height: Int get() = upperRightExclusive.y - lowerLeftInclusive.y
 
     val size: Long get() = width.toLong() * height.toLong()
 
-    val middle: Point = Point(lowerLeft.x + width / 2, lowerLeft.y + height / 2)
+    val middle: Point = Point(lowerLeftInclusive.x + width / 2, lowerLeftInclusive.y + height / 2)
 
-    fun boundPoints() = setOf(lowerLeft, upperLeft, upperRight, lowerRight)
+    fun isVerticallyAligned(other: Shape) =
+        (lowerLeftInclusive.y == other.upperRightExclusive.y
+                || upperRightExclusive.y == other.lowerLeftInclusive.y)
+                && lowerLeftInclusive.x == other.lowerLeftInclusive.x
+                && upperRightExclusive.x == other.upperRightExclusive.x
+
+    fun isHorizontallyAligned(other: Shape) =
+        (lowerLeftInclusive.x == other.upperRightExclusive.x
+                || upperRightExclusive.x == other.lowerLeftInclusive.x)
+                && lowerLeftInclusive.y == other.lowerLeftInclusive.y
+                && upperRightExclusive.y == other.upperRightExclusive.y
+
 }
 
 sealed class BlockId {
@@ -169,10 +172,14 @@ data class Canvas(
             val first = blocks[move.first]!!
             val second = blocks[move.second]!!
 
-            val lowerX = minOf(first.shape.lowerLeft.x, second.shape.lowerLeft.x)
-            val lowerY = minOf(first.shape.lowerLeft.y, second.shape.lowerLeft.y)
-            val upperX = maxOf(first.shape.upperRight.x, second.shape.upperRight.x)
-            val upperY = maxOf(first.shape.upperRight.y, second.shape.upperRight.y)
+            check(first.shape.isVerticallyAligned(second.shape) || first.shape.isHorizontallyAligned(second.shape)) {
+                "merge blocks are not aligned"
+            }
+
+            val lowerX = minOf(first.shape.lowerLeftInclusive.x, second.shape.lowerLeftInclusive.x)
+            val lowerY = minOf(first.shape.lowerLeftInclusive.y, second.shape.lowerLeftInclusive.y)
+            val upperX = maxOf(first.shape.upperRightExclusive.x, second.shape.upperRightExclusive.x)
+            val upperY = maxOf(first.shape.upperRightExclusive.y, second.shape.upperRightExclusive.y)
 
             val children = mutableSetOf<SimpleBlock>()
             children.addAll(first.simpleChildren())
@@ -202,12 +209,12 @@ data class Canvas(
         is SimpleBlock -> {
             val leftBlock = SimpleBlock(
                 block.id + 0,
-                Shape(block.shape.lowerLeft, Point(offset, block.shape.upperRight.y)),
+                Shape(block.shape.lowerLeftInclusive, Point(offset, block.shape.upperRightExclusive.y)),
                 block.color
             )
             val rightBlock = SimpleBlock(
                 block.id + 1,
-                Shape(Point(offset, block.shape.lowerLeft.y), block.shape.upperRight),
+                Shape(Point(offset, block.shape.lowerLeftInclusive.y), block.shape.upperRightExclusive),
                 block.color
             )
 
@@ -224,23 +231,23 @@ data class Canvas(
             val rightBlocks = mutableSetOf<SimpleBlock>()
             for (child in block.children) {
                 when {
-                    child.shape.lowerLeft.x >= offset -> {
+                    child.shape.lowerLeftInclusive.x >= offset -> {
                         rightBlocks += child
                     }
 
-                    child.shape.upperRight.x <= offset -> {
+                    child.shape.upperRightExclusive.x <= offset -> {
                         leftBlocks += child
                     }
 
                     else -> {
                         leftBlocks += SimpleBlock(
                             child.id + 0,
-                            Shape(child.shape.lowerLeft, Point(offset, child.shape.upperRight.y)),
+                            Shape(child.shape.lowerLeftInclusive, Point(offset, child.shape.upperRightExclusive.y)),
                             child.color
                         )
                         rightBlocks += SimpleBlock(
                             child.id + 1,
-                            Shape(Point(offset, child.shape.lowerLeft.y), child.shape.upperRight),
+                            Shape(Point(offset, child.shape.lowerLeftInclusive.y), child.shape.upperRightExclusive),
                             child.color
                         )
                     }
@@ -248,12 +255,12 @@ data class Canvas(
             }
             val leftBlock = ComplexBlock(
                 block.id + 0,
-                Shape(block.shape.lowerLeft, Point(offset, block.shape.upperRight.y)),
+                Shape(block.shape.lowerLeftInclusive, Point(offset, block.shape.upperRightExclusive.y)),
                 leftBlocks
             )
             val rightBlock = ComplexBlock(
                 block.id + 1,
-                Shape(Point(offset, block.shape.lowerLeft.y), block.shape.upperRight),
+                Shape(Point(offset, block.shape.lowerLeftInclusive.y), block.shape.upperRightExclusive),
                 rightBlocks
             )
 
@@ -270,12 +277,12 @@ data class Canvas(
         is SimpleBlock -> {
             val leftBlock = SimpleBlock(
                 block.id + 0,
-                Shape(block.shape.lowerLeft, Point(block.shape.upperRight.x, offset)),
+                Shape(block.shape.lowerLeftInclusive, Point(block.shape.upperRightExclusive.x, offset)),
                 block.color
             )
             val rightBlock = SimpleBlock(
                 block.id + 1,
-                Shape(Point(block.shape.lowerLeft.x, offset), block.shape.upperRight),
+                Shape(Point(block.shape.lowerLeftInclusive.x, offset), block.shape.upperRightExclusive),
                 block.color
             )
 
@@ -292,23 +299,23 @@ data class Canvas(
             val topBlocks = mutableSetOf<SimpleBlock>()
             for (child in block.children) {
                 when {
-                    child.shape.lowerLeft.y >= offset -> {
+                    child.shape.lowerLeftInclusive.y >= offset -> {
                         topBlocks += child
                     }
 
-                    child.shape.upperRight.y <= offset -> {
+                    child.shape.upperRightExclusive.y <= offset -> {
                         bottomBlocks += child
                     }
 
                     else -> {
                         bottomBlocks += SimpleBlock(
                             child.id + 0,
-                            Shape(child.shape.lowerLeft, Point(child.shape.upperRight.x, offset)),
+                            Shape(child.shape.lowerLeftInclusive, Point(child.shape.upperRightExclusive.x, offset)),
                             child.color
                         )
                         topBlocks += SimpleBlock(
                             child.id + 1,
-                            Shape(Point(child.shape.lowerLeft.x, offset), child.shape.upperRight),
+                            Shape(Point(child.shape.lowerLeftInclusive.x, offset), child.shape.upperRightExclusive),
                             child.color
                         )
                     }
@@ -316,12 +323,12 @@ data class Canvas(
             }
             val bottomBlock = ComplexBlock(
                 block.id + 0,
-                Shape(block.shape.lowerLeft, Point(block.shape.upperRight.x, offset)),
+                Shape(block.shape.lowerLeftInclusive, Point(block.shape.upperRightExclusive.x, offset)),
                 bottomBlocks
             )
             val topBlock = ComplexBlock(
                 block.id + 1,
-                Shape(Point(block.shape.lowerLeft.x, offset), block.shape.upperRight),
+                Shape(Point(block.shape.lowerLeftInclusive.x, offset), block.shape.upperRightExclusive),
                 topBlocks
             )
 
@@ -344,24 +351,24 @@ data class Canvas(
     ): Canvas {
         val bottomLeftBlock = bottomLeftBuilder(
             ComplexId(blockId, 0),
-            Shape(block.shape.lowerLeft, point),
+            Shape(block.shape.lowerLeftInclusive, point),
         )
         val bottomRightBlock = bottomRightBuilder(
             ComplexId(blockId, 1),
             Shape(
-                Point(point.x, block.shape.lowerLeft.y),
-                Point(block.shape.upperRight.x, point.y)
+                Point(point.x, block.shape.lowerLeftInclusive.y),
+                Point(block.shape.upperRightExclusive.x, point.y)
             )
         )
         val topRightBlock = topRightBuilder(
             ComplexId(blockId, 2),
-            Shape(point, block.shape.upperRight)
+            Shape(point, block.shape.upperRightExclusive)
         )
         val topLeftBlock = topLeftBuilder(
             ComplexId(blockId, 3),
             Shape(
-                Point(block.shape.lowerLeft.x, point.y),
-                Point(point.x, block.shape.upperRight.y)
+                Point(block.shape.lowerLeftInclusive.x, point.y),
+                Point(point.x, block.shape.upperRightExclusive.y)
             )
         )
         val newBlocks = with(blocks.builder()) {
@@ -379,7 +386,7 @@ data class Canvas(
         val blockId = move.block
         val block = blocks[blockId] ?: error("no block $blockId")
         val point = move.offset.also {
-            check(it.isStrictlyInside(block.shape.lowerLeft, block.shape.upperRight)) {
+            check(it.isStrictlyInside(block.shape.lowerLeftInclusive, block.shape.upperRightExclusive)) {
                 "point $it is out of block $block"
             }
         }
@@ -412,31 +419,31 @@ data class Canvas(
                  * |________|_______|_______|
                  */
                 // Case 2
-                if (subBlock.shape.lowerLeft.x >= point.x && subBlock.shape.lowerLeft.y >= point.y) {
+                if (subBlock.shape.lowerLeftInclusive.x >= point.x && subBlock.shape.lowerLeftInclusive.y >= point.y) {
                     topRightBlocks.add(subBlock)
                     return@forEach
                 }
                 // Case 7
-                if (subBlock.shape.upperRight.x <= point.x && subBlock.shape.upperRight.y <= point.y) {
+                if (subBlock.shape.upperRightExclusive.x <= point.x && subBlock.shape.upperRightExclusive.y <= point.y) {
                     bottomLeftBlocks.add(subBlock)
                     return@forEach
                 }
                 // Case 1
-                if (subBlock.shape.upperRight.x <= point.x && subBlock.shape.lowerLeft.y >= point.y) {
+                if (subBlock.shape.upperRightExclusive.x <= point.x && subBlock.shape.lowerLeftInclusive.y >= point.y) {
                     topLeftBlocks.add(subBlock)
                     return@forEach
                 }
                 // Case 9
-                if (subBlock.shape.lowerLeft.x >= point.x && subBlock.shape.upperRight.y <= point.y) {
+                if (subBlock.shape.lowerLeftInclusive.x >= point.x && subBlock.shape.upperRightExclusive.y <= point.y) {
                     bottomRightBlocks.add(subBlock)
                     return@forEach
                 }
                 // Case 5
-                if (point.isStrictlyInside(subBlock.shape.lowerLeft, subBlock.shape.upperRight)) {
+                if (point.isStrictlyInside(subBlock.shape.lowerLeftInclusive, subBlock.shape.upperRightExclusive)) {
                     bottomLeftBlocks.add(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 0), bottomLeftBlocks.size),
-                            Shape(subBlock.shape.lowerLeft, point),
+                            Shape(subBlock.shape.lowerLeftInclusive, point),
                             subBlock.color
                         )
                     )
@@ -444,8 +451,8 @@ data class Canvas(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 1), bottomRightBlocks.size),
                             Shape(
-                                Point(point.x, subBlock.shape.lowerLeft.y),
-                                Point(subBlock.shape.upperRight.x, point.y)
+                                Point(point.x, subBlock.shape.lowerLeftInclusive.y),
+                                Point(subBlock.shape.upperRightExclusive.x, point.y)
                             ),
                             subBlock.color
                         )
@@ -453,7 +460,7 @@ data class Canvas(
                     topRightBlocks.add(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 2), topRightBlocks.size),
-                            Shape(point, subBlock.shape.upperRight),
+                            Shape(point, subBlock.shape.upperRightExclusive),
                             subBlock.color
                         )
                     )
@@ -461,8 +468,8 @@ data class Canvas(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 3), topLeftBlocks.size),
                             Shape(
-                                Point(subBlock.shape.lowerLeft.x, point.y),
-                                Point(point.x, subBlock.shape.upperRight.y)
+                                Point(subBlock.shape.lowerLeftInclusive.x, point.y),
+                                Point(point.x, subBlock.shape.upperRightExclusive.y)
                             ),
                             subBlock.color
                         )
@@ -471,16 +478,16 @@ data class Canvas(
                 }
 
                 // Case 2
-                if (subBlock.shape.lowerLeft.x <= point.x
-                    && point.x <= subBlock.shape.upperRight.x
-                    && point.y <= subBlock.shape.lowerLeft.y
+                if (subBlock.shape.lowerLeftInclusive.x <= point.x
+                    && point.x <= subBlock.shape.upperRightExclusive.x
+                    && point.y <= subBlock.shape.lowerLeftInclusive.y
                 ) {
                     topLeftBlocks.add(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 4), topLeftBlocks.size),
                             Shape(
-                                subBlock.shape.lowerLeft,
-                                Point(point.x, subBlock.shape.upperRight.y)
+                                subBlock.shape.lowerLeftInclusive,
+                                Point(point.x, subBlock.shape.upperRightExclusive.y)
                             ),
                             subBlock.color
                         )
@@ -489,8 +496,8 @@ data class Canvas(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 5), topRightBlocks.size),
                             Shape(
-                                Point(point.x, subBlock.shape.lowerLeft.y),
-                                subBlock.shape.upperRight
+                                Point(point.x, subBlock.shape.lowerLeftInclusive.y),
+                                subBlock.shape.upperRightExclusive
                             ),
                             subBlock.color
                         )
@@ -498,16 +505,16 @@ data class Canvas(
                     return@forEach
                 }
                 // Case 8
-                if (subBlock.shape.lowerLeft.x <= point.x
-                    && point.x <= subBlock.shape.upperRight.x
-                    && point.y >= subBlock.shape.upperRight.y
+                if (subBlock.shape.lowerLeftInclusive.x <= point.x
+                    && point.x <= subBlock.shape.upperRightExclusive.x
+                    && point.y >= subBlock.shape.upperRightExclusive.y
                 ) {
                     bottomLeftBlocks.add(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 6), bottomLeftBlocks.size),
                             Shape(
-                                subBlock.shape.lowerLeft,
-                                Point(point.x, subBlock.shape.upperRight.y)
+                                subBlock.shape.lowerLeftInclusive,
+                                Point(point.x, subBlock.shape.upperRightExclusive.y)
                             ),
                             subBlock.color
                         )
@@ -516,8 +523,8 @@ data class Canvas(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 7), bottomRightBlocks.size),
                             Shape(
-                                Point(point.x, subBlock.shape.lowerLeft.y),
-                                subBlock.shape.upperRight
+                                Point(point.x, subBlock.shape.lowerLeftInclusive.y),
+                                subBlock.shape.upperRightExclusive
                             ),
                             subBlock.color
                         )
@@ -525,16 +532,16 @@ data class Canvas(
                     return@forEach
                 }
                 // Case 4
-                if (subBlock.shape.lowerLeft.y <= point.y
-                    && point.y <= subBlock.shape.upperRight.y
-                    && point.x <= subBlock.shape.lowerLeft.x
+                if (subBlock.shape.lowerLeftInclusive.y <= point.y
+                    && point.y <= subBlock.shape.upperRightExclusive.y
+                    && point.x <= subBlock.shape.lowerLeftInclusive.x
                 ) {
                     bottomRightBlocks.add(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 8), bottomRightBlocks.size),
                             Shape(
-                                subBlock.shape.lowerLeft,
-                                Point(subBlock.shape.upperRight.x, point.y)
+                                subBlock.shape.lowerLeftInclusive,
+                                Point(subBlock.shape.upperRightExclusive.x, point.y)
                             ),
                             subBlock.color
                         )
@@ -543,8 +550,8 @@ data class Canvas(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 9), topRightBlocks.size),
                             Shape(
-                                Point(subBlock.shape.lowerLeft.x, point.y),
-                                subBlock.shape.upperRight
+                                Point(subBlock.shape.lowerLeftInclusive.x, point.y),
+                                subBlock.shape.upperRightExclusive
                             ),
                             subBlock.color
                         )
@@ -552,16 +559,16 @@ data class Canvas(
                     return@forEach
                 }
                 // Case 6
-                if (subBlock.shape.lowerLeft.y <= point.y
-                    && point.y <= subBlock.shape.upperRight.y
-                    && point.x >= subBlock.shape.upperRight.x
+                if (subBlock.shape.lowerLeftInclusive.y <= point.y
+                    && point.y <= subBlock.shape.upperRightExclusive.y
+                    && point.x >= subBlock.shape.upperRightExclusive.x
                 ) {
                     bottomLeftBlocks.add(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 10), bottomLeftBlocks.size),
                             Shape(
-                                subBlock.shape.lowerLeft,
-                                Point(subBlock.shape.upperRight.x, point.y)
+                                subBlock.shape.lowerLeftInclusive,
+                                Point(subBlock.shape.upperRightExclusive.x, point.y)
                             ),
                             subBlock.color
                         )
@@ -570,8 +577,8 @@ data class Canvas(
                         SimpleBlock(
                             ComplexId(ComplexId(blockId, 11), topLeftBlocks.size),
                             Shape(
-                                Point(subBlock.shape.lowerLeft.x, point.y),
-                                subBlock.shape.upperRight
+                                Point(subBlock.shape.lowerLeftInclusive.x, point.y),
+                                subBlock.shape.upperRightExclusive
                             ),
                             subBlock.color
                         )
@@ -604,7 +611,7 @@ data class Canvas(
             )
             is ComplexBlock -> ComplexBlock(
                 block1.id, block2.shape,
-                block1.offsetChildren(block2.shape.lowerLeft)
+                block1.offsetChildren(block2.shape.lowerLeftInclusive)
             )
         }
         val newBlock2 = when (block2) {
@@ -614,7 +621,7 @@ data class Canvas(
             )
             is ComplexBlock -> ComplexBlock(
                 block2.id, block1.shape,
-                block2.offsetChildren(block1.shape.lowerLeft)
+                block2.offsetChildren(block1.shape.lowerLeftInclusive)
             )
         }
         val newBlocks = with(blocks.builder()) {
@@ -630,8 +637,8 @@ data class Canvas(
             SimpleBlock(
                 ComplexId(id, i),
                 Shape(
-                    block.shape.lowerLeft.add(newLowerLeft).subtract(shape.lowerLeft),
-                    block.shape.upperRight.add(newLowerLeft).subtract(shape.lowerLeft)
+                    block.shape.lowerLeftInclusive.add(newLowerLeft).subtract(shape.lowerLeftInclusive),
+                    block.shape.upperRightExclusive.add(newLowerLeft).subtract(shape.lowerLeftInclusive)
                 ),
                 block.color
             )

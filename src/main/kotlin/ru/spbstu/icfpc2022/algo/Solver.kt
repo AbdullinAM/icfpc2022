@@ -3,13 +3,19 @@ package ru.spbstu.icfpc2022.algo
 import com.sksamuel.scrimage.ImmutableImage
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toPersistentMap
 import ru.spbstu.icfpc2022.InitialConfig
 import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic
-import ru.spbstu.icfpc2022.canvas.*
-import ru.spbstu.icfpc2022.imageParser.*
-import ru.spbstu.icfpc2022.move.MergeMove
+import ru.spbstu.icfpc2022.canvas.Canvas
+import ru.spbstu.icfpc2022.canvas.Point
+import ru.spbstu.icfpc2022.canvas.Shape
+import ru.spbstu.icfpc2022.canvas.SimpleBlock
+import ru.spbstu.icfpc2022.canvas.SimpleId
+import ru.spbstu.icfpc2022.imageParser.color
+import ru.spbstu.icfpc2022.imageParser.getOrNull
+import ru.spbstu.icfpc2022.imageParser.parseImage
+import ru.spbstu.icfpc2022.imageParser.point
+import ru.spbstu.icfpc2022.imageParser.score
 import ru.spbstu.icfpc2022.move.Move
 import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import java.util.TreeMap
@@ -26,13 +32,7 @@ data class Task(
         parseImage("problems/$problemId.png"),
         Canvas(
             initialConfig.blocks.map { it.id as SimpleId }.maxOf { it.id },
-            initialConfig.blocks.map {
-                SimpleBlock(
-                    it.id,
-                    Shape(it.shape.lowerLeft, it.shape.upperRight - Point(1, 1)),
-                    it.color
-                )
-            }.associateBy { it.id }.toPersistentMap(),
+            initialConfig.blocks.associateBy { it.id }.toPersistentMap(),
             initialConfig.width,
             initialConfig.height
         )
@@ -48,13 +48,7 @@ data class Task(
         targetImage,
         Canvas(
             initialConfig.blocks.map { it.id as SimpleId }.maxOf { it.id },
-            initialConfig.blocks.map {
-                SimpleBlock(
-                    it.id,
-                    Shape(it.shape.lowerLeft, it.shape.upperRight - Point(1, 1)),
-                    it.color
-                )
-            }.associateBy { it.id }.toPersistentMap(),
+            initialConfig.blocks.associateBy { it.id }.toPersistentMap(),
             initialConfig.width,
             initialConfig.height
         ),
@@ -70,19 +64,35 @@ data class Task(
     }
 
     fun closestSnap(point: Point, inShape: Shape): Point? {
-        val submap = snapPoints.subMap(inShape.lowerLeft.x, false, inShape.upperRight.x, false)
+        val submap = snapPoints.subMap(
+            inShape.lowerLeftInclusive.x,
+            false,
+            inShape.upperRightExclusive.x - 1,
+            false
+        )
         val xh = submap.ceilingEntry(point.x)
         val xl = submap.floorEntry(point.x)
 
-        val xhsub = xh?.value?.subMap(inShape.lowerLeft.y, false, inShape.upperRight.y, false)
+        val xhsub = xh?.value?.subMap(
+            inShape.lowerLeftInclusive.y,
+            false,
+            inShape.upperRightExclusive.y - 1,
+            false
+        )
         val cand1 = xhsub?.ceilingEntry(point.y)?.value
         val cand2 = xhsub?.floorEntry(point.y)?.value
-        val xlsub = xl?.value?.subMap(inShape.lowerLeft.y, false, inShape.upperRight.y, false)
+        val xlsub = xl?.value?.subMap(
+            inShape.lowerLeftInclusive.y,
+            false,
+            inShape.upperRightExclusive.y - 1,
+            false
+        )
         val cand3 = xlsub?.ceilingEntry(point.y)?.value
         val cand4 = xlsub?.floorEntry(point.y)?.value
 
         return setOfNotNull(cand1, cand2, cand3, cand4)
-            .filter { it.isStrictlyInside(inShape.lowerLeft, inShape.upperRight) }.minByOrNull { point.distance(it) }
+            .filter { it.isStrictlyInside(inShape.lowerLeftInclusive, inShape.upperRightExclusive) }
+            .minByOrNull { point.distance(it) }
     }
 
     init {

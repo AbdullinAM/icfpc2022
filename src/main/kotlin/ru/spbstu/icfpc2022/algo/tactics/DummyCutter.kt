@@ -17,9 +17,9 @@ class DummyCutter(
     val colorTolerance: Int
 ) : BlockTactic(task, tacticStorage) {
     private fun allOneColour(shape: Shape): Boolean {
-        val color = task.targetImage[shape.lowerLeft.x, shape.lowerLeft.y].getCanvasColor()
-        for (x in shape.lowerLeft.x..shape.upperRight.x) {
-            for (y in shape.lowerLeft.y..shape.upperRight.y) {
+        val color = task.targetImage[shape.lowerLeftInclusive.x, shape.lowerLeftInclusive.y].getCanvasColor()
+        for (x in shape.lowerLeftInclusive.x until shape.upperRightExclusive.x) {
+            for (y in shape.lowerLeftInclusive.y until shape.upperRightExclusive.y) {
                 val pixel = task.targetImage[x, y]
                 if (!approximatelyMatches(color, pixel.color, colorTolerance)) return false
             }

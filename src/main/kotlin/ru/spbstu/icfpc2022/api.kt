@@ -15,7 +15,6 @@ import ru.spbstu.icfpc2022.canvas.SimpleBlock
 import ru.spbstu.icfpc2022.canvas.SimpleId
 import ru.spbstu.icfpc2022.imageParser.parseImage
 import java.net.URL
-import java.util.concurrent.Executors
 
 private const val token =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5hcHN0ZXJfMTk5N0BtYWlsLnJ1IiwiZXhwIjoxNjYyMjkzMzY0LCJvcmlnX2lhdCI6MTY2MjIwNjk2NH0.McBW7n5aGifJUwOtkD_yhyR2VVN1BR6SPLkCfZNLBiM"
@@ -162,7 +161,6 @@ fun main() = try {
     val submissions = submissions()
     val bestSubmissions = submissions.bestSubmissions()
 
-//    downloadProblems(problems)
     for (problem in problems) {
         val im = problem.target
 

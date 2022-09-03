@@ -59,14 +59,14 @@ class StupidFuzzer(task: Task) : Solver(task) {
                 val randomOrientation = Orientation.values().random()
 
                 val randomOffset = when (randomOrientation) {
-                    Orientation.X -> randomBlock.shape.lowerLeft.x + (1 until randomBlock.shape.width).random()
-                    Orientation.Y -> randomBlock.shape.lowerLeft.y + (1 until randomBlock.shape.height).random()
+                    Orientation.X -> randomBlock.shape.lowerLeftInclusive.x + (1 until randomBlock.shape.width).random()
+                    Orientation.Y -> randomBlock.shape.lowerLeftInclusive.y + (1 until randomBlock.shape.height).random()
                 }
                 LineCutMove(randomBlockId, randomOrientation, randomOffset)
             } else {
                 val randomPoint = Point(
-                    randomBlock.shape.lowerLeft.x + (1 until randomBlock.shape.width).random(),
-                    randomBlock.shape.lowerLeft.y + (1 until randomBlock.shape.height).random()
+                    randomBlock.shape.lowerLeftInclusive.x + (1 until randomBlock.shape.width).random(),
+                    randomBlock.shape.lowerLeftInclusive.y + (1 until randomBlock.shape.height).random()
                 )
                 PointCutMove(randomBlockId, randomPoint)
             }

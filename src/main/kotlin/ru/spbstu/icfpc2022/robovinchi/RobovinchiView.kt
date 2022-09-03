@@ -29,9 +29,9 @@ class RobovinchiView : View() {
         val blocks = StateCollector.commandToCanvas.getOrNull(curStep.value) ?: return curRectangles
         val rectangles = mutableListOf<Rectangle>()
         for (block in blocks.second) {
-            val xCoor = block.shape.upperLeft.x.toDouble()
+            val xCoor = block.shape.lowerLeftInclusive.x.toDouble()
             //val yCoor = block.shape.lowerRight.y.toDouble()
-            val yCoor = StateCollector.canvasHeight - block.shape.upperRight.y.toDouble()
+            val yCoor = StateCollector.canvasHeight - block.shape.upperRightExclusive.y.toDouble()
             val width = block.shape.width.toDouble()
             val height = block.shape.height.toDouble()
             val rectangle = Rectangle(xCoor, yCoor, width, height).apply {
