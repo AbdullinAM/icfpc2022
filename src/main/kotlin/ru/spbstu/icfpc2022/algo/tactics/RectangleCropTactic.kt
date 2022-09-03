@@ -7,8 +7,6 @@ import ru.spbstu.icfpc2022.algo.Task
 import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic.Companion.approx
 import ru.spbstu.icfpc2022.canvas.*
 import ru.spbstu.icfpc2022.imageParser.get
-import ru.spbstu.icfpc2022.imageParser.getCanvasColor
-import ru.spbstu.icfpc2022.imageParser.subimage
 import ru.spbstu.icfpc2022.move.ColorMove
 import ru.spbstu.icfpc2022.move.LineCutMove
 import ru.spbstu.icfpc2022.move.Orientation
@@ -32,6 +30,122 @@ class RectangleCropTactic(
         return res
     }
 
+    private fun tryLowerLeft(currentBlock: Block): Triple<Point, Point, Shape>? {
+        var cropPoint = currentBlock.shape.lowerLeft
+        var averageColor: Color
+
+        val mutations = mutableListOf(Point(0, 1), Point(1, 0))
+
+        while (true) {
+            var succeded = false
+            for (mutation in mutations) {
+                val newCrop = cropPoint + mutation
+                if (newCrop.x >= currentBlock.shape.upperRight.x) continue
+                if (newCrop.y >= currentBlock.shape.upperRight.y) continue
+                val newShape = Shape(currentBlock.shape.lowerLeft, newCrop)
+                averageColor = computeBlockAverage(task.targetImage, Shape(currentBlock.shape.lowerLeft, newCrop))
+
+                if (approx(averageColor, colorTolerance, task.targetImage.pixels(newShape).toTypedArray(), 0.8)) {
+                    cropPoint = newCrop
+                    succeded = true
+                }
+            }
+            if (!succeded) break
+        }
+        val cropShape = Shape(currentBlock.shape.lowerLeft, cropPoint)
+        return when {
+            cropShape.size < limit -> null
+            else -> Triple(cropPoint, currentBlock.shape.lowerLeft, cropShape)
+        }
+    }
+
+    private fun tryUpperLeft(currentBlock: Block): Triple<Point, Point, Shape>? {
+        var cropPoint = currentBlock.shape.upperLeft
+        var averageColor: Color
+
+        val mutations = mutableListOf(Point(0, -1), Point(1, 0))
+
+        while (true) {
+            var succeded = false
+            for (mutation in mutations) {
+                val newCrop = cropPoint + mutation
+                if (newCrop.x >= currentBlock.shape.upperRight.x) continue
+                if (newCrop.y <= currentBlock.shape.lowerRight.y) continue
+                val newShape = Shape(currentBlock.shape.lowerLeft, newCrop)
+                averageColor = computeBlockAverage(task.targetImage, Shape(currentBlock.shape.lowerLeft, newCrop))
+
+                if (approx(averageColor, colorTolerance, task.targetImage.pixels(newShape).toTypedArray(), 0.8)) {
+                    cropPoint = newCrop
+                    succeded = true
+                }
+            }
+            if (!succeded) break
+        }
+        val cropShape = Shape(currentBlock.shape.lowerLeft, cropPoint)
+        return when {
+            cropShape.size < limit -> null
+            else -> Triple(cropPoint, currentBlock.shape.upperLeft, cropShape)
+        }
+    }
+
+    private fun tryUpperRight(currentBlock: Block): Triple<Point, Point, Shape>? {
+        var cropPoint = currentBlock.shape.upperRight
+        var averageColor: Color
+
+        val mutations = mutableListOf(Point(0, -1), Point(-1, 0))
+
+        while (true) {
+            var succeded = false
+            for (mutation in mutations) {
+                val newCrop = cropPoint + mutation
+                if (newCrop.x <= currentBlock.shape.lowerLeft.x) continue
+                if (newCrop.y <= currentBlock.shape.lowerLeft.y) continue
+                val newShape = Shape(currentBlock.shape.lowerLeft, newCrop)
+                averageColor = computeBlockAverage(task.targetImage, Shape(currentBlock.shape.lowerLeft, newCrop))
+
+                if (approx(averageColor, colorTolerance, task.targetImage.pixels(newShape).toTypedArray(), 0.8)) {
+                    cropPoint = newCrop
+                    succeded = true
+                }
+            }
+            if (!succeded) break
+        }
+        val cropShape = Shape(currentBlock.shape.lowerLeft, cropPoint)
+        return when {
+            cropShape.size < limit -> null
+            else -> Triple(cropPoint, currentBlock.shape.upperRight, cropShape)
+        }
+    }
+
+    private fun tryLowerRight(currentBlock: Block): Triple<Point, Point, Shape>? {
+        var cropPoint = currentBlock.shape.lowerRight
+        var averageColor: Color
+
+        val mutations = mutableListOf(Point(0, 1), Point(-1, 0))
+
+        while (true) {
+            var succeded = false
+            for (mutation in mutations) {
+                val newCrop = cropPoint + mutation
+                if (newCrop.x <= currentBlock.shape.upperLeft.x) continue
+                if (newCrop.y >= currentBlock.shape.upperLeft.y) continue
+                val newShape = Shape(currentBlock.shape.lowerLeft, newCrop)
+                averageColor = computeBlockAverage(task.targetImage, Shape(currentBlock.shape.lowerLeft, newCrop))
+
+                if (approx(averageColor, colorTolerance, task.targetImage.pixels(newShape).toTypedArray(), 0.8)) {
+                    cropPoint = newCrop
+                    succeded = true
+                }
+            }
+            if (!succeded) break
+        }
+        val cropShape = Shape(currentBlock.shape.lowerLeft, cropPoint)
+        return when {
+            cropShape.size < limit -> null
+            else -> Triple(cropPoint, currentBlock.shape.lowerRight, cropShape)
+        }
+    }
+
 
     override fun invoke(state: PersistentState, blockId: BlockId): PersistentState {
         var state = state
@@ -42,45 +156,31 @@ class RectangleCropTactic(
             val currentId = queue.removeFirst()
             val currentBlock = state.canvas.blocks[currentId]!!
 
-            var cropPoint = currentBlock.shape.lowerLeft
-            var averageColor: Color
-
-            val mutations = mutableListOf(Point(0, 1), Point(1, 0))
-
-            while (true) {
-                var succeded = false
-                for (mutation in mutations) {
-                    val newCrop = cropPoint + mutation
-                    if (newCrop.x >= currentBlock.shape.upperRight.x) continue
-                    if (newCrop.y >= currentBlock.shape.upperRight.y) continue
-                    val newShape = Shape(currentBlock.shape.lowerLeft, newCrop)
-                    averageColor = computeBlockAverage(task.targetImage, Shape(currentBlock.shape.lowerLeft, newCrop))
-
-                    if (approx(averageColor, colorTolerance, task.targetImage.pixels(newShape).toTypedArray(), 0.8)) {
-                        cropPoint = newCrop
-                        succeded = true
-                    }
-                }
-                if (!succeded) break
-            }
-            val cropShape = Shape(currentBlock.shape.lowerLeft, cropPoint)
-            if (cropShape.size < limit) {
+            val cropOptions = mutableListOf(
+                tryLowerLeft(currentBlock),
+                tryUpperLeft(currentBlock),
+                tryUpperRight(currentBlock),
+                tryLowerRight(currentBlock)
+            ).filterNotNull()
+            if (cropOptions.isEmpty()) {
                 leftBlocks.add(currentId)
                 continue
             }
+            val bestCrop = cropOptions.maxBy { it.third.size }
+            val (cropPoint, cropBase, cropShape) = bestCrop
 
             val cut = when {
-                cropPoint == currentBlock.shape.lowerLeft -> {
+                cropPoint == cropBase -> {
                     leftBlocks.add(currentId)
                     continue
                 }
-                cropPoint.x == currentBlock.shape.lowerLeft.x -> LineCutMove(
+                cropPoint.x == cropBase.x -> LineCutMove(
                     currentId,
                     Orientation.Y,
                     cropPoint.y
                 )
 
-                cropPoint.y == currentBlock.shape.lowerLeft.y -> LineCutMove(
+                cropPoint.y == cropBase.y -> LineCutMove(
                     currentId,
                     Orientation.X,
                     cropPoint.x
@@ -99,7 +199,7 @@ class RectangleCropTactic(
                 b.shape.lowerLeft == currentBlock.shape.lowerLeft
             }
 
-            averageColor = computeBlockAverage(task.targetImage, cropShape)
+            val averageColor = computeBlockAverage(task.targetImage, cropShape)
             val colorMove = ColorMove(coloringBlock, averageColor)
             state = state.move(colorMove)
 

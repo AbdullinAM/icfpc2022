@@ -8,7 +8,7 @@ import ru.spbstu.icfpc2022.move.Move
 class RectangleCropDummy(
     task: Task,
     val colorTolerance: Int = 27,
-    val limit: Long = 8000L
+    val limit: Long = 5000L
 ) : Solver(task) {
     override fun solve(): List<Move> {
         var state = PersistentState(
