@@ -173,7 +173,7 @@ class RectangleCropTactic(
         val queue = ArrayDeque<BlockId>()
         queue.add(blockId)
 
-        while (queue.isNotEmpty()) {
+        upperLoop@ while (queue.isNotEmpty()) {
             val currentId = queue.removeFirst()
             val currentBlock = state.canvas.blocks[currentId]!!
 
@@ -187,44 +187,49 @@ class RectangleCropTactic(
                 leftBlocks.add(currentId)
                 continue
             }
-            val bestCrop = cropOptions.maxBy { it.third.size }
-            val (cropPoint, cropBase, cropShape) = bestCrop
 
-            val cut = when {
-                cropPoint == cropBase -> {
-                    leftBlocks.add(currentId)
-                    continue
+            for (currentCropOpt in cropOptions.sortedBy { it.third.size }) {
+                val (cropPoint, cropBase, cropShape) = currentCropOpt
+
+                val cut = when {
+                    cropPoint == cropBase -> {
+                        leftBlocks.add(currentId)
+                        continue
+                    }
+                    cropPoint.x == cropBase.x -> LineCutMove(
+                        currentId,
+                        Orientation.Y,
+                        cropPoint.y
+                    )
+
+                    cropPoint.y == cropBase.y -> LineCutMove(
+                        currentId,
+                        Orientation.X,
+                        cropPoint.x
+                    )
+
+                    else -> PointCutMove(currentId, cropPoint)
                 }
-                cropPoint.x == cropBase.x -> LineCutMove(
-                    currentId,
-                    Orientation.Y,
-                    cropPoint.y
-                )
+                val oldBlocks = state.canvas.blocks.keys
+                val newState = state.move(cut)
+                val newBlocks = newState.canvas.blocks.keys
 
-                cropPoint.y == cropBase.y -> LineCutMove(
-                    currentId,
-                    Orientation.X,
-                    cropPoint.x
-                )
+                val createdBlocks = newBlocks - oldBlocks
 
-                else -> PointCutMove(currentId, cropPoint)
+                if (createdBlocks.any { newState.canvas.blocks[it]!!.shape.size < (limit / 3) }) continue
+
+                val coloringBlock = createdBlocks.first {
+                    val b = newState.canvas.blocks[it]!!
+                    b.shape.lowerLeftInclusive == currentBlock.shape.lowerLeftInclusive
+                }
+
+                val averageColor = computeBlockAverage(task.targetImage, cropShape)
+                val colorMove = ColorMove(coloringBlock, averageColor)
+                state = newState.move(colorMove)
+
+                queue.addAll(createdBlocks - coloringBlock)
+                continue@upperLoop
             }
-            val oldBlocks = state.canvas.blocks.keys
-            state = state.move(cut)
-            val newBlocks = state.canvas.blocks.keys
-
-            val createdBlocks = newBlocks - oldBlocks
-
-            val coloringBlock = createdBlocks.first {
-                val b = state.canvas.blocks[it]!!
-                b.shape.lowerLeftInclusive == currentBlock.shape.lowerLeftInclusive
-            }
-
-            val averageColor = computeBlockAverage(task.targetImage, cropShape)
-            val colorMove = ColorMove(coloringBlock, averageColor)
-            state = state.move(colorMove)
-
-            queue.addAll(createdBlocks - coloringBlock)
         }
 
         return state
