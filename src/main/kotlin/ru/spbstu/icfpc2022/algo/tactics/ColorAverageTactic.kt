@@ -38,7 +38,7 @@ class ColorAverageTactic(task: Task, tacticStorage: TacticStorage): BlockTactic(
     override operator fun invoke(state: PersistentState, blockId: BlockId): PersistentState {
         var state = state
         val block = state.canvas.blocks[blockId]!!
-        val avg = computeBlockAverage2(block.shape)
+        val avg = computeBlockAverage(block.shape)
         if (avg == backgroundColor) return state
         if (block is SimpleBlock && block.color == avg) return state
         resultingColor = avg

@@ -2,22 +2,24 @@ package ru.spbstu.icfpc2022.algo.tactics
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.color.RGBColor
+import com.sksamuel.scrimage.nio.PngWriter
 import com.sksamuel.scrimage.pixels.Pixel
 import com.sksamuel.scrimage.pixels.PixelsExtractor
 import ru.spbstu.icfpc2022.algo.PersistentState
 import ru.spbstu.icfpc2022.algo.Task
 import ru.spbstu.icfpc2022.canvas.*
-import ru.spbstu.icfpc2022.imageParser.get
-import ru.spbstu.icfpc2022.imageParser.subimage
-import ru.spbstu.icfpc2022.imageParser.getCanvasColor
-import ru.spbstu.icfpc2022.imageParser.toAwt
+import ru.spbstu.icfpc2022.imageParser.*
 import ru.spbstu.icfpc2022.move.ColorMove
 import ru.spbstu.icfpc2022.move.LineCutMove
 import ru.spbstu.icfpc2022.move.Orientation
 import ru.spbstu.icfpc2022.move.PointCutMove
 import java.awt.Rectangle
+import java.io.File
 
 class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorTolerance: Int) : BlockTactic(task, tacticStorage) {
+
+    val defaultPixelTolerance = 0.95
+    val defaultWidth = 10
 
     companion object {
 
@@ -45,7 +47,7 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
          * Returns true if the colors of all pixels in the array are within the given tolerance
          * compared to the referenced color
          */
-        private fun approx(color: Color, tolerance: Int, pixels: Array<Pixel>): Boolean {
+        private fun approx(color: Color, tolerance: Int, pixels: Array<Pixel>, pt: Double): Boolean {
             val refColor = RGBColor.fromAwt(color.toAwt())
             val minColor = RGBColor(
                 (refColor.red - tolerance).coerceAtLeast(0),
@@ -59,20 +61,20 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                 (refColor.blue + tolerance).coerceAtMost(255),
                 (refColor.alpha + tolerance).coerceAtMost(255),
             )
-            return pixels.all { p: Pixel ->
+            return pixels.count { p: Pixel ->
                 p.red() in minColor.red..maxColor.red &&
                         p.green() in minColor.green..maxColor.green &&
                         p.blue() in minColor.blue..maxColor.blue &&
                         p.alpha() in minColor.alpha..maxColor.alpha
-            }
+            } > (pixels.size * pt)
         }
 
         /**
          * Returns true if all pixels in the array have the same color, or both are fully transparent.
          */
-        private fun uniform(color: Color, pixels: Array<Pixel>): Boolean {
+        private fun uniform(color: Color, pixels: Array<Pixel>, pt: Double): Boolean {
             val target = RGBColor.fromAwt(color.toAwt())
-            return pixels.count { p: Pixel -> p.alpha() == 0 && target.alpha == 0 || p.toARGBInt() == target.toARGBInt() } > (pixels.size * 0.8).toLong()
+            return pixels.count { p: Pixel -> p.alpha() == 0 && target.alpha == 0 || p.toARGBInt() == target.toARGBInt() } > (pixels.size * pt).toLong()
         }
 
         /**
@@ -82,9 +84,9 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
          *
          * If the given colour and target colour are both fully transparent, then they will match.
          */
-        private fun colorMatches(color: Color, tolerance: Int, pixels: Array<Pixel>): Boolean {
+        private fun colorMatches(color: Color, tolerance: Int, pixels: Array<Pixel>, pt: Double): Boolean {
             if (tolerance < 0 || tolerance > 255) throw RuntimeException("Tolerance value must be between 0 and 255 inclusive")
-            return if (tolerance == 0) uniform(color, pixels) else approx(color, tolerance, pixels)
+            return if (tolerance == 0) uniform(color, pixels, pt) else approx(color, tolerance, pixels, pt)
         }
 
 
@@ -98,41 +100,68 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
             width: Int,
             col: Int,
             f: PixelsExtractor,
-            tolerance: Int
+            tolerance: Int,
+            pt: Double
         ): Int {
             return if (col == width || !colorMatches(
                     color,
                     tolerance,
-                    f.apply(Rectangle(col, 0, 1, height))
+                    f.apply(Rectangle(col, 0, 1, height)),
+                    pt
                 )
-            ) col else scanright(color, height, width, col + 1, f, tolerance)
+            ) col else scanright(color, height, width, col + 1, f, tolerance, pt)
         }
 
-        private fun scanleft(color: Color, height: Int, col: Int, f: PixelsExtractor, tolerance: Int): Int {
+        private fun scanleft(
+            color: Color,
+            height: Int,
+            col: Int,
+            f: PixelsExtractor,
+            tolerance: Int,
+            pt: Double
+        ): Int {
             return if (col == 0 || !colorMatches(
                     color,
                     tolerance,
-                    f.apply(Rectangle(col, 0, 1, height))
+                    f.apply(Rectangle(col, 0, 1, height)),
+                    pt
                 )
-            ) col else scanleft(color, height, col - 1, f, tolerance)
+            ) col else scanleft(color, height, col - 1, f, tolerance, pt)
         }
 
-        private fun scandown(color: Color, height: Int, width: Int, row: Int, f: PixelsExtractor, tolerance: Int): Int {
+        private fun scandown(
+            color: Color,
+            height: Int,
+            width: Int,
+            row: Int,
+            f: PixelsExtractor,
+            tolerance: Int,
+            pt: Double
+        ): Int {
             return if (row == height || !colorMatches(
                     color,
                     tolerance,
-                    f.apply(Rectangle(0, row, width, 1))
+                    f.apply(Rectangle(0, row, width, 1)),
+                    pt
                 )
-            ) row else scandown(color, height, width, row + 1, f, tolerance)
+            ) row else scandown(color, height, width, row + 1, f, tolerance, pt)
         }
 
-        private fun scanup(color: Color, width: Int, row: Int, f: PixelsExtractor, tolerance: Int): Int {
+        private fun scanup(
+            color: Color,
+            width: Int,
+            row: Int,
+            f: PixelsExtractor,
+            tolerance: Int,
+            pt: Double
+        ): Int {
             return if (row == 0 || !colorMatches(
                     color,
                     tolerance,
-                    f.apply(Rectangle(0, row, width, 1))
+                    f.apply(Rectangle(0, row, width, 1)),
+                    pt
                 )
-            ) row else scanup(color, width, row - 1, f, tolerance)
+            ) row else scanup(color, width, row - 1, f, tolerance, pt)
         }
 
         /**
@@ -177,7 +206,7 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
          * @param colorTolerance the amount of tolerance to use when determining whether
          * the color matches the reference color [0..255]
          */
-        fun autocrop(image: ImmutableImage, color: Color, colorTolerance: Int): Pair<Shape?, ImmutableImage> {
+        fun autocrop(image: ImmutableImage, color: Color, colorTolerance: Int, pixelTolerance: Double): Pair<Shape?, ImmutableImage> {
             val x1 =
                 scanright(
                     color,
@@ -185,7 +214,8 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                     image.width,
                     0,
                     { r -> pixels(image, r.x, r.y, r.width, r.height) },
-                    colorTolerance
+                    colorTolerance,
+                    pixelTolerance
                 )
             val x2 =
                 scanleft(
@@ -193,7 +223,8 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                     image.height,
                     image.width - 1,
                     { r -> pixels(image, r.x, r.y, r.width, r.height) },
-                    colorTolerance
+                    colorTolerance,
+                    pixelTolerance
                 )
             val y1 =
                 scandown(
@@ -202,7 +233,8 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                     image.width,
                     0,
                     { r -> pixels(image, r.x, r.y, r.width, r.height) },
-                    colorTolerance
+                    colorTolerance,
+                    pixelTolerance
                 )
             val y2 =
                 scanup(
@@ -210,7 +242,8 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                     image.width,
                     image.height - 1,
                     { r -> pixels(image, r.x, r.y, r.width, r.height) },
-                    colorTolerance
+                    colorTolerance,
+                    pixelTolerance
                 )
             return when {
                 x1 == 0 && y1 == 0 && x2 == image.width - 1 && y2 == image.height - 1 -> null to image
@@ -224,16 +257,24 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
             }
         }
 
-        private fun computeMaxColor(image: ImmutableImage, start: Point, end: Point): Color {
-            val colors = mutableMapOf<Color, Int>()
+        private fun computeAvgColor(image: ImmutableImage, start: Point, end: Point): Color {
+            var r = 0L
+            var g = 0L
+            var b = 0L
+            var a = 0L
+            var count = 0
             for (x in start.x until end.x) {
                 for (y in start.y until end.y) {
                     val pixel = image[x, y]
                     val col = pixel.getCanvasColor()
-                    colors[col] = colors.getOrDefault(col, 0) + 1
+                    count++
+                    a += col.a.toLong()
+                    r += col.r.toLong()
+                    b += col.b.toLong()
+                    g += col.g.toLong()
                 }
             }
-            return colors.maxBy { it.value }.key
+             return Color((r / count).toInt(), (g / count).toInt(), (b / count).toInt(), (a / count).toInt())
         }
 
         data class AutocropState(
@@ -243,6 +284,8 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
         )
     }
 
+    lateinit var lastUncoloredBlock: BlockId
+
     override fun invoke(state: PersistentState, blockId: BlockId): PersistentState {
         val cropBlock = state.canvas.blocks[blockId]!!
         var autocropState = AutocropState(
@@ -250,28 +293,58 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
             task.targetImage.subimage(cropBlock.shape),
             SimpleId(0)
         )
+        var i = 1
+
+        var tolerance = colorTolerance
+        var pixelTolerance = defaultPixelTolerance
+        var width = defaultWidth
 
         while (true) {
-            val width = 10
-            val tolerance = colorTolerance
             val shape = autocropState.state.canvas.blocks[autocropState.block]!!.shape
+
+            if (shape.size < 40 * 40) break
+
             val variants = mutableListOf(
-                Point(0, 0) to Point(shape.width, width),
-                Point(0, 0) to Point(width, shape.height),
-                Point(0, shape.height - width) to Point(shape.width, shape.height),
-                Point(shape.width - width, 0) to Point(shape.width, shape.height),
+                Point(0, 0) to Point(shape.width, width.coerceAtMost(shape.height)),
+                Point(0, 0) to Point(width.coerceAtMost(shape.width), shape.height),
+                Point(0, (shape.height - width).coerceAtLeast(0)) to Point(shape.width, shape.height),
+                Point((shape.width - width).coerceAtLeast(0), 0) to Point(shape.width, shape.height),
             )
 
             val colors = variants.map {
-                computeMaxColor(autocropState.image, it.first, it.second)
+                computeAvgColor(autocropState.image, it.first, it.second)
             }
-            val autocrops = colors.map { it to autocrop(autocropState.image, it, tolerance) }
+            val autocrops = colors.map { it to autocrop(autocropState.image, it, tolerance, pixelTolerance) }
                 .filter { it.second.first != null }
                 .map { Triple(it.first, it.second.first!!, it.second.second) }
 
-            if (autocrops.isEmpty()) break
+            val bestCrop = autocrops.minByOrNull { it.second.size }
 
-            val bestCrop = autocrops.minBy { it.second.size }
+            if (bestCrop == null || (shape.size - bestCrop.second.size) < (shape.size * 0.1)) {
+                var changed = false
+                if (tolerance < 255) {
+                    tolerance++
+                    changed = true
+                }
+                if (pixelTolerance > 0) {
+                    pixelTolerance -= 0.01
+                    changed = true
+                }
+                if (width < 100 && pixelTolerance < 0.7) {
+                    width += 10
+                    tolerance = colorTolerance
+                    pixelTolerance = defaultPixelTolerance
+                    changed = true
+                }
+                if (!changed) {
+                    println("break: $tolerance $pixelTolerance $width")
+                    break
+                }
+                continue
+            }
+            tolerance = colorTolerance
+            pixelTolerance = defaultPixelTolerance
+            width = defaultWidth
 
             val colorMove = ColorMove(autocropState.block, bestCrop.first)
             var newState = autocropState.state.move(colorMove)
@@ -291,12 +364,14 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                 }
                 newState = newState.move(firstCrop)
 
-                nextBlock = newState.canvas.blocks.toList().first {
+                nextBlock = newState.canvas.blocks.toList().firstOrNull {
                     newBlockShape.middle.isStrictlyInside(
                         it.second.shape.lowerLeft,
                         it.second.shape.upperRight
                     )
-                }.first
+                }?.first.also {
+                    if (it == null) System.err.println("cut failed")
+                } ?: break
             }
 
             if (newBlockShape.upperRight != shape.upperRight) {
@@ -306,14 +381,17 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                     else -> PointCutMove(nextBlock, newBlockShape.upperRight)
                 }
                 newState = newState.move(secondCrop)
-                nextBlock = newState.canvas.blocks.toList().first {
+                nextBlock = newState.canvas.blocks.toList().firstOrNull {
                     newBlockShape.middle.isStrictlyInside(
                         it.second.shape.lowerLeft,
                         it.second.shape.upperRight
                     )
-                }.first
+                }?.first.also {
+                    if (it == null) System.err.println("cut failed")
+                } ?: break
             }
 
+//            bestCrop.third.flipY().forWriter(PngWriter(0)).write(File("solutions/${task.problemId}_${i++}.png"))
 
             autocropState = AutocropState(
                 newState,
@@ -321,6 +399,7 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                 nextBlock,
             )
         }
+        lastUncoloredBlock = autocropState.block
         return autocropState.state
     }
 }

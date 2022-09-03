@@ -14,21 +14,24 @@ class AutocropDummy(task: Task) : Solver(task) {
         val colorTolerance = 27
 
         val storage = TacticStorage()
-        state = AutocropTactic(task, storage, colorTolerance)(state, SimpleId(0))
+        val cropTactic = AutocropTactic(task, storage, colorTolerance)
+        state = cropTactic(state, SimpleId(0))
+        val coloringBlocks = listOf(cropTactic.lastUncoloredBlock)
 
-        val previousBlocks = state.canvas.blocks.keys
-        val dummyCutter = DummyCutter(
-            task,
-            storage,
-            3000,
-            colorTolerance
-        )
-        state = dummyCutter.invoke(state)
 
-        val merger = MergerTactic(task, storage)
-        state = merger(state)
-
-        val coloringBlocks = state.canvas.blocks.keys - previousBlocks
+//        val previousBlocks = state.canvas.blocks.keys
+//        val dummyCutter = DummyCutter(
+//            task,
+//            storage,
+//            3000,
+//            colorTolerance
+//        )
+//        state = dummyCutter.invoke(state)
+//
+//        val merger = MergerTactic(task, storage)
+//        state = merger(state)
+//
+//        val coloringBlocks = state.canvas.blocks.keys - previousBlocks
         for (block in coloringBlocks) {
             state = ColorAverageTactic(task, storage)(state, block)
         }
