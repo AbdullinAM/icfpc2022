@@ -44,6 +44,7 @@ fun main(args: Array<String>) {
                                         cutterTactic
                                     )
                                     val solution = rectangleCropDummy.solve()
+                                    println("${solution.score} | ${if (solution.score >= task.bestScoreOrMax) "worse" else "better"} | ${task.bestScoreOrMax}")
                                     if (solution.score < task.bestScoreOrMax) {
                                         println("Succeeded with parameters: colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cutterTactic")
                                         val dumper = DumpSolutions(task, TacticStorage())
