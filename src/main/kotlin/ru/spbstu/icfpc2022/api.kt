@@ -139,7 +139,7 @@ fun submissions(): List<Submission> {
     return mapper.readValue(response.body!!.string(), RawSubmissions::class.java).submissions
 }
 
-fun submit(problemId: Int, code: String) {
+fun submit(problemId: Int, code: String): String? {
     val payload = MultipartBody.Builder().setType(MultipartBody.FORM)
         .addFormDataPart("file", "submission.isl", code.toRequestBody("text/plain".toMediaType()))
         .build()
@@ -148,7 +148,7 @@ fun submit(problemId: Int, code: String) {
         .addHeader("Authorization", "Bearer $token")
         .post(payload)
         .build()
-    client.newCall(request).execute().also { println(it.body?.string()) }
+    return client.newCall(request).execute().body?.string()
 }
 
 fun List<Submission>.bestSubmissions() =

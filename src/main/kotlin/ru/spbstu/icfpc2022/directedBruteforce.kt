@@ -75,7 +75,11 @@ fun main(args: Array<String>) {
                                     )
                                     val solution = rectangleCropDummy.solve()
                                     if (solution.score < task.bestScoreOrMax) {
-                                        submit(problem.id, solution.commands.joinToString("\n"))
+                                        println(
+                                            """Submitting solution, parameters = $it, score = ${solution.score},
+                                              |response = ${submit(problem.id, solution.commands.joinToString("\n"))}""".trimMargin()
+                                        )
+
                                         task = Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
                                     }
                                     it to solution.score
