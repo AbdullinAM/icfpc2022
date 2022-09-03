@@ -23,9 +23,9 @@ class ExhaustiveCutter(
     val colorTolerance: Int
 ) : BlockTactic(task, tacticStorage) {
     private fun allOneColour(shape: Shape): Boolean {
-        val color = task.targetImage[shape.lowerLeft.x, shape.lowerLeft.y].getCanvasColor()
-        for (x in shape.lowerLeft.x..shape.upperRight.x) {
-            for (y in shape.lowerLeft.y..shape.upperRight.y) {
+        val color = task.targetImage[shape.lowerLeftInclusive.x, shape.lowerLeftInclusive.y].getCanvasColor()
+        for (x in shape.lowerLeftInclusive.x until shape.upperRightExclusive.x) {
+            for (y in shape.lowerLeftInclusive.y until shape.upperRightExclusive.y) {
                 val pixel = task.targetImage[x, y]
                 if (!approximatelyMatches(color, pixel.color, colorTolerance)) return false
             }
@@ -57,11 +57,11 @@ class ExhaustiveCutter(
 
             val midPoint = currentBlock.shape.middle
             val halfShape = Shape(
-                currentBlock.shape.lowerLeft.midPointWith(midPoint),
-                currentBlock.shape.upperRight.midPointWith(midPoint)
+                currentBlock.shape.lowerLeftInclusive.midPointWith(midPoint),
+                currentBlock.shape.upperRightExclusive.midPointWith(midPoint)
             )
 
-            val (xPick) = (halfShape.lowerLeft.x + 1 until halfShape.upperRight.x).map {
+            val (xPick) = (halfShape.lowerLeftInclusive.x + 1 until halfShape.upperRightExclusive.x - 1).map {
                 val cut = LineCutMove(current, Orientation.X, it)
                 val blocksBefore = state.canvas.blocks.keys
                 val newState = state.move(cut, true)
@@ -72,7 +72,7 @@ class ExhaustiveCutter(
                 it to diffColors(colors)
             }.groupBy { it.second }.maxBy { it.key }.value.minBy { abs(it.first - midPoint.x) }
 
-            val (yPick) = (halfShape.lowerLeft.y + 1 until halfShape.upperRight.y).map {
+            val (yPick) = (halfShape.lowerLeftInclusive.y + 1 until halfShape.upperRightExclusive.y - 1).map {
                 val cut = PointCutMove(current, Point(xPick, it))
                 val blocksBefore = state.canvas.blocks.keys
                 val newState = state.move(cut, true)
