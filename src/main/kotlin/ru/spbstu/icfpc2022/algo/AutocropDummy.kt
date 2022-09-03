@@ -32,7 +32,7 @@ class AutocropDummy(
 
         val coloringBlocks = state.canvas.blocks.keys - previousBlocks
         for (block in coloringBlocks) {
-            state = ColorAverageTactic(task, storage)(state, block)
+            state = ColorAverageTactic(task, storage, colorTolerance)(state, block)
         }
 
         val dumper = DumpSolutions(task, storage)
