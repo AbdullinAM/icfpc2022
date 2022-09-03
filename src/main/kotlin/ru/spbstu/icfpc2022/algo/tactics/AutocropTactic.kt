@@ -16,7 +16,12 @@ import ru.spbstu.icfpc2022.move.Orientation
 import ru.spbstu.icfpc2022.move.PointCutMove
 import java.awt.Rectangle
 
-class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorTolerance: Int) : BlockTactic(task, tacticStorage) {
+class AutocropTactic(
+    task: Task,
+    tacticStorage: TacticStorage,
+    val colorTolerance: Int
+) : BlockTactic(task, tacticStorage) {
+    var leftBlocks = mutableSetOf<BlockId>()
 
     companion object {
 
@@ -34,17 +39,17 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                 (refColor.b + tolerance).coerceAtMost(255),
                 (refColor.a + tolerance).coerceAtMost(255),
             )
-            return color2.r in minColor.r .. maxColor.r &&
-                    color2.g in minColor.g .. maxColor.g &&
-                    color2.b in minColor.b .. maxColor.b &&
-                    color2.a in minColor.a .. maxColor.a
+            return color2.r in minColor.r..maxColor.r &&
+                    color2.g in minColor.g..maxColor.g &&
+                    color2.b in minColor.b..maxColor.b &&
+                    color2.a in minColor.a..maxColor.a
         }
 
         /**
          * Returns true if the colors of all pixels in the array are within the given tolerance
          * compared to the referenced color
          */
-        private fun approx(color: Color, tolerance: Int, pixels: Array<Pixel>, pt: Double): Boolean {
+        public fun approx(color: Color, tolerance: Int, pixels: Array<Pixel>, pt: Double): Boolean {
             val refColor = RGBColor.fromAwt(color.toAwt())
             val minColor = RGBColor(
                 (refColor.red - tolerance).coerceAtLeast(0),
@@ -203,7 +208,12 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
          * @param colorTolerance the amount of tolerance to use when determining whether
          * the color matches the reference color [0..255]
          */
-        fun autocrop(image: ImmutableImage, color: Color, colorTolerance: Int, pixelTolerance: Double): Pair<Shape?, ImmutableImage> {
+        fun autocrop(
+            image: ImmutableImage,
+            color: Color,
+            colorTolerance: Int,
+            pixelTolerance: Double
+        ): Pair<Shape?, ImmutableImage> {
             val x1 =
                 scanright(
                     color,
@@ -304,8 +314,18 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
 
             if (newBlockShape.lowerLeft != shape.lowerLeft) {
                 val firstCrop = when {
-                    newBlockShape.lowerLeft.x == shape.lowerLeft.x -> LineCutMove(nextBlock, Orientation.Y, newBlockShape.lowerLeft.y)
-                    newBlockShape.lowerLeft.y == shape.lowerLeft.y -> LineCutMove(nextBlock, Orientation.X, newBlockShape.lowerLeft.x)
+                    newBlockShape.lowerLeft.x == shape.lowerLeft.x -> LineCutMove(
+                        nextBlock,
+                        Orientation.Y,
+                        newBlockShape.lowerLeft.y
+                    )
+
+                    newBlockShape.lowerLeft.y == shape.lowerLeft.y -> LineCutMove(
+                        nextBlock,
+                        Orientation.X,
+                        newBlockShape.lowerLeft.x
+                    )
+
                     else -> PointCutMove(nextBlock, newBlockShape.lowerLeft)
                 }
                 newState = newState.move(firstCrop)
@@ -322,8 +342,18 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
 
             if (newBlockShape.upperRight != shape.upperRight) {
                 val secondCrop = when {
-                    newBlockShape.upperRight.x == shape.upperRight.x -> LineCutMove(nextBlock, Orientation.Y, newBlockShape.upperRight.y)
-                    newBlockShape.upperRight.y == shape.upperRight.y -> LineCutMove(nextBlock, Orientation.X, newBlockShape.upperRight.x)
+                    newBlockShape.upperRight.x == shape.upperRight.x -> LineCutMove(
+                        nextBlock,
+                        Orientation.Y,
+                        newBlockShape.upperRight.y
+                    )
+
+                    newBlockShape.upperRight.y == shape.upperRight.y -> LineCutMove(
+                        nextBlock,
+                        Orientation.X,
+                        newBlockShape.upperRight.x
+                    )
+
                     else -> PointCutMove(nextBlock, newBlockShape.upperRight)
                 }
                 newState = newState.move(secondCrop)
@@ -344,6 +374,7 @@ class AutocropTactic(task: Task, tacticStorage: TacticStorage, val colorToleranc
                 nextBlock,
             )
         }
+        leftBlocks.add(autocropState.block)
         return autocropState.state
     }
 }

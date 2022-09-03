@@ -33,6 +33,9 @@ data class Point(
                 && bottomLeft.y < y
                 && y < topRight.y
 
+
+    fun isStrictlyInside(shape: Shape): Boolean = isStrictlyInside(shape.lowerLeft, shape.upperRight)
+
     fun isOnBoundary(bottomLeft: Point, topRight: Point): Boolean =
         (bottomLeft.x == x && bottomLeft.y <= y && y <= topRight.y)
                 || (topRight.x == x && bottomLeft.y <= y && y <= topRight.y)
@@ -41,6 +44,8 @@ data class Point(
 
     fun isInside(bottomLeft: Point, topRight: Point): Boolean =
         isStrictlyInside(bottomLeft, topRight) || isOnBoundary(bottomLeft, topRight)
+
+    fun isInside(shape: Shape): Boolean = isInside(shape.lowerLeft, shape.upperRight)
 }
 
 data class Color(
