@@ -6,7 +6,7 @@ import ru.spbstu.icfpc2022.robovinchi.Robovinchi
 import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import tornadofx.launch
 
-fun main() {
+fun main() = try {
     val problemId = 3
     val problems = getProblems()
     val submissions = submissions()
@@ -18,4 +18,6 @@ fun main() {
     val commands = RectangleCropDummy(task).solve()
     println("Solution size: ${commands.commands.size}")
     launch<Robovinchi>()
+} finally {
+    shutdownClient()
 }
