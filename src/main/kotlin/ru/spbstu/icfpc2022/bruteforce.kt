@@ -15,13 +15,13 @@ suspend fun <T, U> CoroutineScope.mapAsync(collection: Iterable<T>, body:suspend
 suspend fun <T, U> CoroutineScope.forEachAsync(collection: Iterable<T>, body:suspend (T) -> U): Unit =
     collection.map { e -> async { body(e) } }.awaitAll().let {  }
 
-fun main() {
+fun main(args: Array<String>) {
     try {
         val problems = getProblems()
         val submissions = submissions()
         val bestSubmissions = submissions.bestSubmissions()
 
-        val taskId = 3
+        val taskId = args.first().toInt()
 
         val problem = problems.first { it.id == taskId }
         val im = problem.target
@@ -30,9 +30,9 @@ fun main() {
         StateCollector.turnMeOff = true
         runBlocking {
             withContext(Dispatchers.Default) {
-                forEachAsync((0..50 step 5)) { colorTolerance ->
-                    forEachAsync((10..20 step 2)) { pixelTolerance ->
-                        forEachAsync((generateSequence(500) { it * 2 }.take(5).asIterable())) { limit ->
+                forEachAsync((0..50 step 2)) { colorTolerance ->
+                    forEachAsync((10..20)) { pixelTolerance ->
+                        forEachAsync((generateSequence(500) { it + 500 }.take(32).asIterable())) { limit ->
                             forEachAsync(CuttingTactic.values().asList()) { cutterTactic ->
                                 println("Parameters: colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cutterTactic")
                                 val rectangleCropDummy = RectangleCropDummy(task, colorTolerance, pixelTolerance * 0.05, limit.toLong(), cutterTactic)
