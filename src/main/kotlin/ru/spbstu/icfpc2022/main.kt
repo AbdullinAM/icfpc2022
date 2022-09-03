@@ -8,8 +8,12 @@ import tornadofx.launch
 
 fun main() {
     val problemId = 3
+    val problems = getProblems()
+    val submissions = submissions()
+
+    val problem = problems.first { it.id == problemId }
     StateCollector.pathToProblemImage = "problems/$problemId.png"
-    val task = Task(problemId)
+    val task = Task(problemId, problem.initialConfig)
     StateCollector.task = task
     val commands = RectangleCropDummy(task).solve()
     println("Solution size: ${commands.commands.size}")
