@@ -36,9 +36,6 @@ class AutocropDummy(
             state = ColorAverageTactic(task, storage, colorTolerance)(state, block)
         }
 
-        val dumper = DumpSolutions(task, storage)
-        dumper(state)
-
         return state
     }
 }
