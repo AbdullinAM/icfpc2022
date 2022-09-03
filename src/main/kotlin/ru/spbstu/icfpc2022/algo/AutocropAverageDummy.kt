@@ -28,7 +28,6 @@ class AutocropAverageDummy(
             for (block in coloringBlocks) {
                 state = ColorAverageTactic(task, storage, colorTolerance)(state, block)
             }
-            println(state.score)
             if (state.score < bestState.score) {
                 bestState = state
             }
