@@ -6,13 +6,21 @@ import ru.spbstu.icfpc2022.robovinchi.Robovinchi
 import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import tornadofx.launch
 
-fun main() {
-    val problemId = 8
-    StateCollector.pathToProblemImage = "problems/$problemId.png"
+fun main() = try {
+    val problemId = 1
     val problems = getProblems()
-    val task = Task(problemId, problems.first { it.id == problemId }.initialConfig)
+    val submissions = submissions()
+    val bestSubmissions = submissions.bestSubmissions()
+
+    val problem = problems.first { it.id == problemId }
+    StateCollector.pathToProblemImage = "problems/$problemId.png"
+    val im = problem.target
+    val bestScore = bestSubmissions[problem.id]?.score
+    var task = Task(problem.id, im, problem.initialConfig, bestScore = bestScore)
     StateCollector.task = task
     val commands = RectangleCropDummy(task).solve()
     println("Solution size: ${commands.commands.size}")
     launch<Robovinchi>()
+} finally {
+    shutdownClient()
 }

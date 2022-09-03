@@ -41,6 +41,8 @@ data class Point(
 
     fun isInside(bottomLeft: Point, topRight: Point): Boolean =
         isStrictlyInside(bottomLeft, topRight) || isOnBoundary(bottomLeft, topRight)
+
+    fun midPointWith(that: Point) = Point((x + that.x) / 2, (y + that.y) / 2)
 }
 
 data class Color(

@@ -10,12 +10,14 @@ import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.getCanvasColor
 import ru.spbstu.icfpc2022.move.PointCutMove
 
-class DummyCutter(
+open class DummyCutter(
     task: Task,
     tacticStorage: TacticStorage,
     val limit: Long,
     val colorTolerance: Int
 ) : BlockTactic(task, tacticStorage) {
+    open val useSnaps: Boolean = false
+
     private fun allOneColour(shape: Shape): Boolean {
         val color = task.targetImage[shape.lowerLeftInclusive.x, shape.lowerLeftInclusive.y].getCanvasColor()
         for (x in shape.lowerLeftInclusive.x until shape.upperRightExclusive.x) {
@@ -41,9 +43,11 @@ class DummyCutter(
 
             var middlePoint = currentBlock.shape.middle
 
-            when (val snap = task.closestSnap(middlePoint, currentBlock.shape)) {
-                null -> {}
-                else -> middlePoint = snap
+            if (useSnaps) {
+                when (val snap = task.closestSnap(middlePoint, currentBlock.shape)) {
+                    null -> {}
+                    else -> middlePoint = snap
+                }
             }
 
             val cut = PointCutMove(current, middlePoint)
@@ -55,4 +59,10 @@ class DummyCutter(
         return state
     }
 
+}
+
+class DummyCutterWithSnaps(task: Task, tacticStorage: TacticStorage, limit: Long, colorTolerance: Int) :
+    DummyCutter(task, tacticStorage, limit, colorTolerance) {
+    override val useSnaps: Boolean
+        get() = true
 }

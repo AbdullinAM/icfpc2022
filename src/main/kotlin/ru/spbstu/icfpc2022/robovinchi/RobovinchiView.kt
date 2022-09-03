@@ -22,7 +22,7 @@ class RobovinchiView : View() {
     val snapPoints = StateCollector.task.snapPoints.flatMap { it.value.values }.map {
         val x = it.x.toDouble()
         val y = StateCollector.canvasHeight - it.y.toDouble()
-        Circle(x, y, 0.5, Color(1.0, 0.0, 1.0, 0.5)).attachTo(this)
+        Circle(x, y, 0.5, Color(0.0, 1.0, 1.0, 0.5)).attachTo(this)
     }.takeIf { it.size < 20000 }.orEmpty()
 
     private fun getRectanglesFromBlocks(): List<Rectangle> {
