@@ -85,10 +85,12 @@ fun submit(problemId: Int, code: String) {
     client.newCall(request).execute().also { println(it.body?.string()) }
 }
 
-private fun Submissions.bestSubmissions() = submissions
+fun Submissions.bestSubmissions() = submissions
     .groupBy { it.problem_id }
     .mapValues { (_, subs) -> subs.filter { it.status == "SUCCEEDED" }  }
     .mapValues { (_, subs) -> subs.minByOrNull { it.score } }
+
+fun shutdownClient() = client.connectionPool.evictAll()
 
 fun main() = try {
     val problems = getProblems()
@@ -108,5 +110,5 @@ fun main() = try {
         }
     }
 } finally {
-    client.connectionPool.evictAll()
+    shutdownClient()
 }
