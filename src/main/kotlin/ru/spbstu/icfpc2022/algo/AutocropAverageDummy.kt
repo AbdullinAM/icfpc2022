@@ -12,7 +12,7 @@ class AutocropAverageDummy(
     task: Task,
     val colorTolerance: Int = 27
 ) : Solver(task) {
-    override fun solve(): List<Move> {
+    override fun solve(): PersistentState {
         val rootState = PersistentState(
             task,
             Canvas.empty(task.targetImage.width, task.targetImage.height)
@@ -36,6 +36,6 @@ class AutocropAverageDummy(
         val dumper = DumpSolutions(task, storage)
         dumper(bestState)
 
-        return bestState.commands
+        return bestState
     }
 }

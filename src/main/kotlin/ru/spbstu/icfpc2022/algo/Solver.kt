@@ -84,5 +84,5 @@ fun PersistentState(problemId: Int): PersistentState {
 abstract class Solver(
     val task: Task
 ) {
-    abstract fun solve(): List<Move>
+    abstract fun solve(): PersistentState
 }
