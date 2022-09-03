@@ -56,8 +56,12 @@ class ExhaustiveCutter(
             if (allOneColour(currentBlock.shape)) continue
 
             val midPoint = currentBlock.shape.middle
+            val halfShape = Shape(
+                currentBlock.shape.lowerLeft.midPointWith(midPoint),
+                currentBlock.shape.upperRight.midPointWith(midPoint)
+            )
 
-            val (xPick) = (currentBlock.shape.lowerLeft.x + 1 until currentBlock.shape.upperRight.x).map {
+            val (xPick) = (halfShape.lowerLeft.x + 1 until halfShape.upperRight.x).map {
                 val cut = LineCutMove(current, Orientation.X, it)
                 val blocksBefore = state.canvas.blocks.keys
                 val newState = state.move(cut, true)
@@ -68,7 +72,7 @@ class ExhaustiveCutter(
                 it to diffColors(colors)
             }.groupBy { it.second }.maxBy { it.key }.value.minBy { abs(it.first - midPoint.x) }
 
-            val (yPick) = (currentBlock.shape.lowerLeft.y + 1 until currentBlock.shape.upperRight.y).map {
+            val (yPick) = (halfShape.lowerLeft.y + 1 until halfShape.upperRight.y).map {
                 val cut = PointCutMove(current, Point(xPick, it))
                 val blocksBefore = state.canvas.blocks.keys
                 val newState = state.move(cut, true)
