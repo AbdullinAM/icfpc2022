@@ -75,9 +75,12 @@ fun main(args: Array<String>) {
                                     )
                                     val solution = rectangleCropDummy.solve()
                                     if (solution.score < task.bestScoreOrMax) {
+                                        val preamble = "# directedBruteForce, parameters = $it\n"
                                         println(
-                                            """Submitting solution, parameters = $it, score = ${solution.score},
-                                              |response = ${submit(problem.id, solution.commands.joinToString("\n"))}""".trimMargin()
+                                            """Submitting solution, id = ${problem.id}, $it, score = ${solution.score},
+                                              |response = ${submit(problem.id, solution.commands.joinToString("\n", prefix = preamble))}
+                                              |"""
+                                                .trimMargin()
                                         )
 
                                         task = Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
