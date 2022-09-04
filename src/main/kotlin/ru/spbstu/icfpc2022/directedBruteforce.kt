@@ -17,11 +17,11 @@ data class Parameters(
     val coloringMethod: ColoringMethod = ColoringMethod.AVERAGE
 ) {
     fun neighbours(): Collection<Parameters> = setOf(
-        copy(colorTolerance = (colorTolerance + 2).coerceAtMost(20)),
+        copy(colorTolerance = (colorTolerance + 2).coerceAtMost(50)),
         copy(colorTolerance = (colorTolerance - 2).coerceAtLeast(0)),
-        copy(pixelTolerance = (pixelTolerance + 1).coerceAtMost(128)),
-        copy(pixelTolerance = (pixelTolerance - 1).coerceAtLeast(0)),
-        copy(limit = (limit + 500).coerceAtMost(400*400)),
+        copy(pixelTolerance = (pixelTolerance + 1).coerceAtMost(20)),
+        copy(pixelTolerance = (pixelTolerance - 1).coerceAtLeast(10)),
+        copy(limit = (limit + 500).coerceAtMost(16000)),
         copy(limit = (limit - 500).coerceAtLeast(500)),
     ) + ColoringMethod.values().filter { it != coloringMethod }.map { copy(coloringMethod = it) }
 }
@@ -39,7 +39,7 @@ fun main(args: Array<String>) {
             else -> taskSpec.map { it.toInt() }
         }
         runBlocking {
-            withContext(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2).asCoroutineDispatcher()) {
+            withContext(Dispatchers.Default) {
                 forEachAsync(taskIds) { taskId ->
                     val problem = problems.first { it.id == taskId }
                     val im = problem.target
@@ -56,7 +56,7 @@ fun main(args: Array<String>) {
 
                         var currentScore = Long.MAX_VALUE
                         var currentWinner = Parameters()
-                        val cutoff = 3000
+                        val cutoff = 1000
                         var stuckCounter = 0
                         while (que.isNotEmpty()) {
                             val next = que.poll()
