@@ -55,6 +55,8 @@ fun main(args: Array<String>) {
 
                         var currentScore = Long.MAX_VALUE
                         var currentWinner = Parameters()
+                        val cutoff = 3000
+                        var stuckCounter = 0
                         while (que.isNotEmpty()) {
                             val next = que.poll()
 
@@ -96,10 +98,21 @@ fun main(args: Array<String>) {
 
                             for ((neighbour, score) in top3) {
                                 if (score <= currentScore) {
-                                    if (score < currentScore)
-                                        println("New score: $score, parameters: taskId = $taskId, $neighbour, cutterTactic = $cuttingTactic")
-                                    currentScore = score
-                                    currentWinner = neighbour
+                                    print("|")
+                                    if (score < currentScore) {
+                                        println("\nNew score: $score, parameters: taskId = $taskId, $neighbour, cutterTactic = $cuttingTactic")
+                                        currentScore = score
+                                        currentWinner = neighbour
+                                        stuckCounter = 0
+                                    }
+                                    if (score == currentScore) {
+                                        stuckCounter++
+                                        if (stuckCounter > cutoff) {
+                                            println("\nStuck limit exceeded, parameters: taskId = $taskId, $neighbour, cutterTactic = $cuttingTactic")
+                                            continue
+                                        }
+                                    }
+
                                     if (neighbour !in pending) {
                                         que.add(neighbour)
                                         pending.add(neighbour)
@@ -108,7 +121,7 @@ fun main(args: Array<String>) {
                             }
                         }
 
-                        println("Task#$taskId\ncutterTactic = $cuttingTactic\nlast score: $currentScore\nwith parameters $currentWinner")
+                        println("\nTask#$taskId\ncutterTactic = $cuttingTactic\nlast score: $currentScore\nwith parameters $currentWinner")
                     }
                 }
             }
