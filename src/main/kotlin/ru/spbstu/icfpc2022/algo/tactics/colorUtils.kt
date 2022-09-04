@@ -344,9 +344,9 @@ private fun approximateGeometricMedian(
     val avgDistance = distance(rData, gData, bData, aData, rAvg, gAvg, bAvg, aAvg)
 
     var bestDist = avgDistance
-    var step = intArrayOf(rMax - rMin, gMax - gMin, bMax - bMin, aMax - aMin).average()
+    var step = intArrayOf(rMax - rMin, gMax - gMin, bMax - bMin, aMax - aMin).average().toInt()
 
-    while (step > 0.2) {
+    while (step > 0) {
         val updated = approxLoop(searchR, bestR, rMin, rMax, step) { r ->
             approxLoop(searchG, bestG, gMin, gMax, step) { g ->
                 approxLoop(searchB, bestB, bMin, bMax, step) { b ->
@@ -380,15 +380,15 @@ private inline fun approxLoop(
     current: Int,
     min: Int,
     max: Int,
-    step: Double,
+    step: Int,
     body: (Int) -> Boolean
 ): Boolean {
     if (search) {
-        val m1 = round(current - step).toInt()
+        val m1 = (current - step)
         if (m1 >= min) {
             if (body(m1)) return true
         }
-        val p1 = round(current + step).toInt()
+        val p1 = (current + step)
         if (p1 <= max) {
             if (body(p1)) return true
         }
