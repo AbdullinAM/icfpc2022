@@ -25,7 +25,7 @@ class RectangleCropDummy(
         val mergeToOneTactic = MergeToOneTactic(task, storage)
         state = mergeToOneTactic(state)
 
-        val colorBackgroundTactic = ColorBackgroundTactic(task, storage)
+        val colorBackgroundTactic = ColorBackgroundTactic(task, storage, shouldForceColor = task.shouldForceColorBackground)
         state = colorBackgroundTactic(state)
 
         val autocropTactic = AutocropTactic(task, storage, colorTolerance, pixelTolerance)

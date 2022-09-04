@@ -10,8 +10,9 @@ class ColorAverageTactic(
     task: Task,
     tacticStorage: TacticStorage,
     val colorTolerance: Int = 17,
-    val coloringMethod: ColoringMethod = ColoringMethod.AVERAGE
-): BlockTactic(task, tacticStorage) {
+    val coloringMethod: ColoringMethod = ColoringMethod.AVERAGE,
+    val shouldForceColor: Boolean = false
+) : BlockTactic(task, tacticStorage) {
     val backgroundTactic: ColorBackgroundTactic?
         get() = storage.get()
     val backgroundColor: Color?
@@ -26,14 +27,19 @@ class ColorAverageTactic(
         if (avg == backgroundColor) return state
         resultingColor = avg
 
-        return colorBlock(state, blockId, avg, colorTolerance)
+        return if (shouldForceColor) state.move(ColorMove(blockId, avg))
+        else colorBlock(state, blockId, avg, colorTolerance)
     }
 
 }
 
-class ColorBackgroundTactic(task: Task, tacticStorage: TacticStorage,
-                            coloringMethod: ColoringMethod = ColoringMethod.MAX): Tactic(task, tacticStorage) {
-    val sub = ColorAverageTactic(task, tacticStorage, coloringMethod = coloringMethod)
+class ColorBackgroundTactic(
+    task: Task,
+    tacticStorage: TacticStorage,
+    coloringMethod: ColoringMethod = ColoringMethod.MAX,
+    shouldForceColor: Boolean = false
+) : Tactic(task, tacticStorage) {
+    val sub = ColorAverageTactic(task, tacticStorage, coloringMethod = coloringMethod, shouldForceColor = shouldForceColor)
 
     val resultingColor: Color? get() = sub.resultingColor
 
