@@ -25,7 +25,8 @@ fun main(args: Array<String>) {
             task,
             iterationTimeout = 30.minutes,
             iterationSize = 2000,
-            maxIterations = 2
+            maxIterations = 2,
+            maxRandomMoveSequence = 10
         )
 
         runBlocking {
