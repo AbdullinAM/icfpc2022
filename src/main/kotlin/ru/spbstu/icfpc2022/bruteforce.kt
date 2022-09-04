@@ -28,9 +28,9 @@ fun main(args: Array<String>) {
         StateCollector.turnMeOff = true
         runBlocking {
             withContext(Dispatchers.Default) {
-                forEachAsync((0..50 step 2)) { colorTolerance ->
+                forEachAsync((0..50 step 5)) { colorTolerance ->
                     forEachAsync((10..20)) { pixelTolerance ->
-                        forEachAsync((generateSequence(500) { it + 500 }.take(32).asIterable())) { limit ->
+                        forEachAsync((generateSequence(1000) { it + 1000 }.take(16).asIterable())) { limit ->
                             run {
                                 run {
                                     try {
