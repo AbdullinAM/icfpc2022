@@ -10,7 +10,6 @@ import ru.spbstu.icfpc2022.canvas.*
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.subimage
 import ru.spbstu.icfpc2022.imageParser.toAwt
-import ru.spbstu.icfpc2022.move.ColorMove
 import ru.spbstu.icfpc2022.move.LineCutMove
 import ru.spbstu.icfpc2022.move.Orientation
 import ru.spbstu.icfpc2022.move.PointCutMove

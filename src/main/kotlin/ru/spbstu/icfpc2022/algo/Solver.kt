@@ -80,6 +80,8 @@ data class Task(
         else -> baseConstAfter35
     }
 
+    val shouldForceColorBackground get() = problemId > 35
+
     constructor(problemId: Int, initialConfig: InitialConfig) : this(
         problemId,
         parseImage("problems/$problemId.png"),
