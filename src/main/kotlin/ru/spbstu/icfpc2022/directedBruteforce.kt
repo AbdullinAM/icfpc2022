@@ -22,7 +22,7 @@ data class Parameters(
         copy(pixelTolerance = pixelTolerance + 1),
         copy(pixelTolerance = (pixelTolerance - 1).coerceAtLeast(0)),
         copy(limit = limit + 500),
-        copy(limit = (limit - 500).coerceAtLeast(0)),
+        copy(limit = (limit - 500).coerceAtLeast(200)),
     ) + ColoringMethod.values().filter { it != coloringMethod }.map { copy(coloringMethod = it) }
 }
 
