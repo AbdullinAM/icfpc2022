@@ -17,12 +17,12 @@ data class Parameters(
     val coloringMethod: ColoringMethod = ColoringMethod.AVERAGE
 ) {
     fun neighbours(): Collection<Parameters> = setOf(
-        copy(colorTolerance = colorTolerance + 2),
+        copy(colorTolerance = (colorTolerance + 2).coerceAtMost(20)),
         copy(colorTolerance = (colorTolerance - 2).coerceAtLeast(0)),
-        copy(pixelTolerance = pixelTolerance + 1),
+        copy(pixelTolerance = (pixelTolerance + 1).coerceAtMost(128)),
         copy(pixelTolerance = (pixelTolerance - 1).coerceAtLeast(0)),
-        copy(limit = limit + 500),
-        copy(limit = (limit - 500).coerceAtLeast(200)),
+        copy(limit = (limit + 500).coerceAtMost(400*400)),
+        copy(limit = (limit - 500).coerceAtLeast(500)),
     ) + ColoringMethod.values().filter { it != coloringMethod }.map { copy(coloringMethod = it) }
 }
 
