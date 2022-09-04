@@ -218,7 +218,7 @@ fun computeBlockGeometricMedianApproximated(image: ImmutableImage, shape: Shape)
     var bestDist = avgDistance
     var step = intArrayOf(rMax - rMin, gMax - gMin, bMax - bMin, aMax - aMin).average()
 
-    while (step > 0.4) {
+    while (step > 0.2) {
         val updated = approxLoop(searchR, bestR, rMin, rMax, step) { r ->
             approxLoop(searchG, bestG, gMin, gMax, step) { g ->
                 approxLoop(searchB, bestB, bMin, bMax, step) { b ->
