@@ -14,6 +14,7 @@ fun computeAverageColor(image: ImmutableImage, shape: Shape, coloringMethod: Col
         ColoringMethod.AVERAGE -> computeBlockAverage(image, shape)
         ColoringMethod.MEDIAN -> computeBlockMedian(image, shape)
         ColoringMethod.MAX -> computeBlockMax(image, shape)
+        ColoringMethod.GEOMETRIC_MEDIAN -> computeBlockGeometricMedianApproximated(image, shape)
     }
 }
 

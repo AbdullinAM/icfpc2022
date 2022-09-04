@@ -4,7 +4,7 @@ import ru.spbstu.icfpc2022.algo.tactics.*
 import ru.spbstu.icfpc2022.canvas.SimpleId
 
 enum class CuttingTactic { DUMB, DUMBSNAP, EXHAUSTIVE }
-enum class ColoringMethod { AVERAGE, MEDIAN, MAX }
+enum class ColoringMethod { AVERAGE, MEDIAN, MAX, GEOMETRIC_MEDIAN }
 
 class RectangleCropDummy(
     task: Task,

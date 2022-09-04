@@ -7,6 +7,7 @@ import ru.spbstu.icfpc2022.canvas.Shape
 import ru.spbstu.icfpc2022.imageParser.euclid
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.getCanvasColor
+import kotlin.math.round
 import kotlin.math.sqrt
 
 fun digest(image: ImmutableImage, shape: Shape, color: Color): Double {
@@ -38,7 +39,12 @@ fun computeBlockAverage(image: ImmutableImage, shape: Shape): Color {
             count++
         }
     }
-    return Color((r / count).toInt(), (g / count).toInt(), (b / count).toInt(), (a / count).toInt())
+    return Color(
+        round(r.toDouble() / count).toInt(),
+        round(g.toDouble() / count).toInt(),
+        round(b.toDouble() / count).toInt(),
+        round(a.toDouble() / count).toInt()
+    )
 }
 
 fun computeNotBlockAverage(image: ImmutableImage, shape: Shape): Color {
@@ -59,7 +65,12 @@ fun computeNotBlockAverage(image: ImmutableImage, shape: Shape): Color {
             }
         }
     }
-    return Color((r / count).toInt(), (g / count).toInt(), (b / count).toInt(), (a / count).toInt())
+    return Color(
+        round(r.toDouble() / count).toInt(),
+        round(g.toDouble() / count).toInt(),
+        round(b.toDouble() / count).toInt(),
+        round(a.toDouble() / count).toInt()
+    )
 }
 
 fun computeBlockMedian(image: ImmutableImage, shape: Shape): Color {
@@ -106,4 +117,153 @@ fun computeBlockMax(image: ImmutableImage, start: Point, end: Point): Color {
         }
     }
     return colors.maxBy { it.value }.key
+}
+
+private fun square(x: Int) = x * x
+
+private fun distance(
+    rData: IntArray,
+    gData: IntArray,
+    bData: IntArray,
+    aData: IntArray,
+    r: Int,
+    g: Int,
+    b: Int,
+    a: Int
+): Double {
+    var distance = 0.0
+
+    for (i in rData.indices) {
+        var sum = 0.0
+        sum += square(rData[i] - r)
+        sum += square(gData[i] - g)
+        sum += square(bData[i] - b)
+        sum += square(aData[i] - a)
+        distance += sqrt(sum)
+    }
+
+    return distance
+}
+
+fun computeBlockGeometricMedianApproximated(image: ImmutableImage, shape: Shape): Color {
+    var rAvgCnt = 0.0
+    var rMin = Int.MAX_VALUE
+    var rMax = Int.MIN_VALUE
+    val rData = IntArray(shape.size.toInt())
+
+    var gAvgCnt = 0.0
+    var gMin = Int.MAX_VALUE
+    var gMax = Int.MIN_VALUE
+    val gData = IntArray(shape.size.toInt())
+
+    var bAvgCnt = 0.0
+    var bMin = Int.MAX_VALUE
+    var bMax = Int.MIN_VALUE
+    val bData = IntArray(shape.size.toInt())
+
+    var aAvgCnt = 0.0
+    var aMin = Int.MAX_VALUE
+    var aMax = Int.MIN_VALUE
+    val aData = IntArray(shape.size.toInt())
+
+    var idx = 0
+    for (x in shape.lowerLeftInclusive.x until shape.upperRightExclusive.x) {
+        for (y in shape.lowerLeftInclusive.y until shape.upperRightExclusive.y) {
+            val pixel = image[x, y]
+            rData[idx] = pixel.red()
+            gData[idx] = pixel.green()
+            bData[idx] = pixel.blue()
+            aData[idx] = pixel.alpha()
+
+            rAvgCnt += rData[idx]
+            rMin = minOf(rMin, rData[idx])
+            rMax = maxOf(rMax, rData[idx])
+
+            gAvgCnt += gData[idx]
+            gMin = minOf(gMin, gData[idx])
+            gMax = maxOf(gMax, gData[idx])
+
+            bAvgCnt += bData[idx]
+            bMin = minOf(bMin, bData[idx])
+            bMax = maxOf(bMax, bData[idx])
+
+            aAvgCnt += aData[idx]
+            aMin = minOf(aMin, aData[idx])
+            aMax = maxOf(aMax, aData[idx])
+
+            idx++
+        }
+    }
+
+    val searchR = rMin != rMax
+    val searchG = gMin != gMax
+    val searchB = bMin != bMax
+    val searchA = aMin != aMax
+
+    if (!searchR && !searchG && !searchB && !searchA) {
+        return Color(rMin, gMin, bMin, aMin)
+    }
+
+    val rAvg = round(rAvgCnt / idx).toInt()
+    val gAvg = round(gAvgCnt / idx).toInt()
+    val bAvg = round(bAvgCnt / idx).toInt()
+    val aAvg = round(aAvgCnt / idx).toInt()
+
+    val avgDistance = distance(rData, gData, bData, aData, rAvg, gAvg, bAvg, aAvg)
+
+    var bestR = rAvg
+    var bestG = gAvg
+    var bestB = bAvg
+    var bestA = aAvg
+    var bestDist = avgDistance
+    var step = intArrayOf(rMax - rMin, gMax - gMin, bMax - bMin, aMax - aMin).average()
+
+    while (step > 0.4) {
+        val updated = approxLoop(searchR, bestR, rMin, rMax, step) { r ->
+            approxLoop(searchG, bestG, gMin, gMax, step) { g ->
+                approxLoop(searchB, bestB, bMin, bMax, step) { b ->
+                    approxLoop(searchA, bestA, aMin, aMax, step) { a ->
+                        val dist = distance(rData, gData, bData, aData, r, g, b, a)
+                        if (dist < bestDist) {
+                            bestDist = dist
+                            bestR = r
+                            bestG = g
+                            bestB = b
+                            bestA = a
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!updated) {
+            step /= 2
+        }
+    }
+
+    return Color(bestR, bestG, bestB, bestA)
+}
+
+private inline fun approxLoop(
+    search: Boolean,
+    current: Int,
+    min: Int,
+    max: Int,
+    step: Double,
+    body: (Int) -> Boolean
+): Boolean {
+    if (search) {
+        val m1 = round(current - step).toInt()
+        if (m1 >= min) {
+            if (body(m1)) return true
+        }
+        val p1 = round(current + step).toInt()
+        if (p1 <= max) {
+            if (body(p1)) return true
+        }
+    }
+    return body(current)
 }
