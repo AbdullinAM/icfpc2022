@@ -1,10 +1,7 @@
 package ru.spbstu.icfpc2022.algo
 
 import kotlinx.coroutines.*
-import ru.spbstu.icfpc2022.algo.tactics.DumpSolutions
-import ru.spbstu.icfpc2022.algo.tactics.TacticStorage
-import ru.spbstu.icfpc2022.algo.tactics.computeBlockAverage
-import ru.spbstu.icfpc2022.algo.tactics.computeBlockMedian
+import ru.spbstu.icfpc2022.algo.tactics.*
 import ru.spbstu.icfpc2022.canvas.Block
 import ru.spbstu.icfpc2022.canvas.BlockId
 import ru.spbstu.icfpc2022.canvas.Canvas
@@ -151,11 +148,13 @@ class StupidFuzzer(
     }
 
     private fun randomColor(randomBlock: Block, currentState: PersistentState): PersistentState {
-        val color = if (Random.nextBoolean()) {
-            computeBlockAverage(task.targetImage, randomBlock.shape)
-        } else {
-            computeBlockMedian(task.targetImage, randomBlock.shape)
+        val coloringMethod = when (Random.nextInt(0, 10)) {
+            1, 2 -> ColoringMethod.AVERAGE
+            3, 4 -> ColoringMethod.MEDIAN
+            5 -> ColoringMethod.MAX
+            else -> ColoringMethod.GEOMETRIC_MEDIAN
         }
+        val color = computeAverageColor(task.targetImage, randomBlock.shape, coloringMethod)
         val move = ColorMove(randomBlock.id, color)
         return currentState.move(move)
     }
