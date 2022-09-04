@@ -1,6 +1,8 @@
 package ru.spbstu.icfpc2022.imageParser
 
 import com.sksamuel.scrimage.ImmutableImage
+import com.sksamuel.scrimage.MutableImage
+import com.sksamuel.scrimage.color.RGBColor
 import com.sksamuel.scrimage.pixels.Pixel
 import ru.spbstu.icfpc2022.canvas.Canvas
 import ru.spbstu.icfpc2022.canvas.Color
@@ -24,20 +26,22 @@ fun ImmutableImage.getOrNull(x: Int, y: Int): Pixel? = when {
 
 fun ImmutableImage.subimage(shape: Shape): ImmutableImage = subimage(shape.lowerLeftInclusive.x, shape.lowerLeftInclusive.y, shape.width, shape.height)
 
+fun MutableImage.setColor(x: Int, y: Int, color: Color) {
+    setColor(x, y, RGBColor(color.r, color.g, color.b, color.a))
+}
+
 fun Color.toAwt() = java.awt.Color(r, g, b, a)
 
 fun Canvas.toImage(): ImmutableImage {
     var image = ImmutableImage.create(width, height)
     for (block in this.allSimpleBlocks()) {
-        image = image.overlay(
-            ImmutableImage.filled(
-                block.shape.width,
-                block.shape.height,
-                block.color.toAwt()
-            ),
-            block.shape.lowerLeftInclusive.x,
-            block.shape.lowerLeftInclusive.y
-        )
+        val startPoint = block.shape.lowerLeftInclusive
+        val endPoint = block.shape.upperRightExclusive
+        for (x in startPoint.x until endPoint.x) {
+            for (y in startPoint.y until endPoint.y) {
+                image.setColor(x, y, block.color)
+            }
+        }
     }
     return image
 }

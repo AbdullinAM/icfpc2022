@@ -14,7 +14,6 @@ class RectangleCropDummy(
     val colorTolerance: Int = 17,
     val pixelTolerance: Double = 0.95,
     val limit: Long = 5000L,
-    val cuttingTactic: CuttingTactic = CuttingTactic.DUMB,
     val coloringMethod: ColoringMethod = ColoringMethod.AVERAGE
 ) : Solver(task) {
     override fun solve(): PersistentState {
@@ -36,10 +35,7 @@ class RectangleCropDummy(
             state = rectangleCropTactic(state, left)
         }
 
-        val cutterCreator =  when (cuttingTactic) {
-            CuttingTactic.DUMBSNAP -> ::DummyColoringCutterWithSnaps
-            else -> ::DummyColoringCutter
-        }
+        val cutterCreator = ::DummyColoringCutter
 
         val dummyCutter = cutterCreator(
             task,

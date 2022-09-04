@@ -47,7 +47,7 @@ fun main(args: Array<String>) {
                     var task = Task(problem.id, im, problem.initialConfig, bestScore = bestScore)
                     StateCollector.turnMeOff = true
 
-                    forEachAsync(CuttingTactic.values().asList()) { cuttingTactic ->
+                    run {
                         val visited: MutableSet<Parameters> = Collections.synchronizedSet(mutableSetOf<Parameters>())
                         val pending: MutableSet<Parameters> = Collections.synchronizedSet(mutableSetOf<Parameters>())
 
@@ -74,7 +74,6 @@ fun main(args: Array<String>) {
                                         colorTolerance,
                                         pixelTolerance * 0.05,
                                         limit.toLong(),
-                                        cuttingTactic,
                                         it.coloringMethod
                                     )
                                     val solution = rectangleCropDummy.solve()
@@ -91,7 +90,7 @@ fun main(args: Array<String>) {
                                     }
                                     it to solution.score
                                 } catch (e: Throwable) {
-                                    System.err.println("Failed with parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit, cutterTactic = $cuttingTactic")
+                                    System.err.println("Failed with parameters: taskId = $taskId, colorTolerance = $colorTolerance, pixelTolerance = ${pixelTolerance * 0.05}, limit = $limit")
                                     e.printStackTrace()
                                     it to Long.MAX_VALUE
                                 }
@@ -101,7 +100,7 @@ fun main(args: Array<String>) {
                                 if (score <= currentScore) {
                                     print("|")
                                     if (score < currentScore) {
-                                        println("\nNew score: $score, parameters: taskId = $taskId, $neighbour, cutterTactic = $cuttingTactic")
+                                        println("\nNew score: $score, parameters: taskId = $taskId, $neighbour")
                                         currentScore = score
                                         currentWinner = neighbour
                                         stuckCounter = 0
@@ -109,7 +108,7 @@ fun main(args: Array<String>) {
                                     if (score == currentScore) {
                                         stuckCounter++
                                         if (stuckCounter > cutoff) {
-                                            println("\nStuck limit exceeded, parameters: taskId = $taskId, $neighbour, cutterTactic = $cuttingTactic")
+                                            println("\nStuck limit exceeded, parameters: taskId = $taskId, $neighbour")
                                             continue
                                         }
                                     }
@@ -122,7 +121,7 @@ fun main(args: Array<String>) {
                             }
                         }
 
-                        println("\nTask#$taskId\ncutterTactic = $cuttingTactic\nlast score: $currentScore\nwith parameters $currentWinner")
+                        println("\nTask#$taskId\nlast score: $currentScore\nwith parameters $currentWinner")
                     }
                 }
             }
