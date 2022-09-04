@@ -67,7 +67,7 @@ fun main(args: Array<String>) {
                                                         "pixelTolerance = ${pixelTolerance * 0.05}," +
                                                         " limit = $limit," +
                                                         "cutterTactic = $cutterTactic, " +
-                                                        "coloringMethod = $coloringMethod"
+                                                        "coloringMethod = $coloringMethod\n"
                                             submit(problem.id, solution.commands.joinToString("\n", prefix = preamble))
                                             task =
                                                 Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
