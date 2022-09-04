@@ -32,7 +32,7 @@ class RawInitialConfigBlock(
     val pngBottomLeftPoint: IntArray?
 ) {
     fun resolveSimpleBlock(): SimpleBlock {
-        val newColor = color ?: intArrayOf(255, 255, 255, 255)
+        val newColor = color ?: intArrayOf(255, 255, 0, 0)
         val bl = Point(bottomLeft[0], bottomLeft[1])
         val ur = Point(topRight[0], topRight[1])
         val c = Color(newColor[0], newColor[1], newColor[2], newColor[3])
