@@ -76,8 +76,8 @@ data class Task(
     val targetImage: ImmutableImage,
     val initialCanvas: Canvas,
     val bestScore: Long? = null,
+    val colorCache: ConcurrentHashMap<Pair<Shape, ColoringMethod>, Color> = ConcurrentHashMap()
 ) {
-    val colorCache = ConcurrentHashMap<Pair<Shape, ColoringMethod>, Color>()
 
     private val baseMoveCosts = when {
         problemId <= 35 -> baseCostsForFirst35

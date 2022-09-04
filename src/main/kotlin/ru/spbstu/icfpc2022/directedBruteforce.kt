@@ -84,7 +84,7 @@ fun main(args: Array<String>) {
                                                 .trimMargin()
                                         )
 
-                                        task = Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
+                                        task = task.copy(bestScore = solution.score)
                                     }
                                     it to solution.score
                                 } catch (e: Throwable) {
