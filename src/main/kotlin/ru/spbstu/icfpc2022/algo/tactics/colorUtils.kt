@@ -1,12 +1,12 @@
 package ru.spbstu.icfpc2022.algo.tactics
 
 import com.sksamuel.scrimage.ImmutableImage
-import ru.spbstu.icfpc2022.canvas.Color
-import ru.spbstu.icfpc2022.canvas.Point
-import ru.spbstu.icfpc2022.canvas.Shape
+import ru.spbstu.icfpc2022.algo.PersistentState
+import ru.spbstu.icfpc2022.canvas.*
 import ru.spbstu.icfpc2022.imageParser.euclid
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.getCanvasColor
+import ru.spbstu.icfpc2022.move.ColorMove
 import kotlin.math.round
 import kotlin.math.sqrt
 
@@ -395,3 +395,31 @@ private inline fun approxLoop(
     }
     return body(current)
 }
+
+public fun approximatelyMatches(color1: Color, color2: Color, tolerance: Int): Boolean {
+    val refColor = color1
+    val minColor = Color(
+        (refColor.r - tolerance).coerceAtLeast(0),
+        (refColor.g - tolerance).coerceAtLeast(0),
+        (refColor.b - tolerance).coerceAtLeast(0),
+        (refColor.a - tolerance).coerceAtLeast(0)
+    )
+    val maxColor = Color(
+        (refColor.r + tolerance).coerceAtMost(255),
+        (refColor.g + tolerance).coerceAtMost(255),
+        (refColor.b + tolerance).coerceAtMost(255),
+        (refColor.a + tolerance).coerceAtMost(255),
+    )
+    return color2.r in minColor.r..maxColor.r &&
+            color2.g in minColor.g..maxColor.g &&
+            color2.b in minColor.b..maxColor.b &&
+            color2.a in minColor.a..maxColor.a
+}
+
+fun colorBlock(state: PersistentState, blockId: BlockId, color: Color, colorTolerance: Int): PersistentState {
+    val block = state.canvas.blocks[blockId]
+    if (block!!.simpleChildren().all { approximatelyMatches(it.color, color, colorTolerance)  }) return state
+
+    return state.move(ColorMove(blockId, color))
+}
+

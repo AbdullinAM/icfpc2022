@@ -8,7 +8,6 @@ import ru.spbstu.icfpc2022.canvas.Shape
 import ru.spbstu.icfpc2022.imageParser.color
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.getCanvasColor
-import ru.spbstu.icfpc2022.move.ColorMove
 import ru.spbstu.icfpc2022.move.PointCutMove
 
 open class DummyColoringCutter(
@@ -41,8 +40,7 @@ open class DummyColoringCutter(
         val currentBlock = state.canvas.blocks[blockId]!!
         val avg = computeAverageColor(task.targetImage, currentBlock.shape, coloringMethod)
 
-        candidates.add(state.move(ColorMove(blockId, avg)))
-
+        candidates.add(colorBlock(state, blockId, avg, colorTolerance))
 
         if (currentBlock.shape.size <= limit) return candidates
         if (allOneColour(currentBlock.shape)) return candidates
