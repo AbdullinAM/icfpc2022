@@ -33,6 +33,11 @@ data class Point(
                 && x < topRight.x
                 && bottomLeft.y < y
                 && y < topRight.y
+    fun isStrictlyInsideOrLeft(bottomLeft: Point, topRight: Point): Boolean =
+        bottomLeft.x <= x
+                && x < topRight.x
+                && bottomLeft.y <= y
+                && y < topRight.y
 
     fun isOnBoundary(bottomLeft: Point, topRight: Point): Boolean =
         (bottomLeft.x == x && bottomLeft.y <= y && y <= topRight.y)

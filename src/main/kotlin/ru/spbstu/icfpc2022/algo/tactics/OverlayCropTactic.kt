@@ -7,6 +7,7 @@ import ru.spbstu.icfpc2022.canvas.BlockId
 import ru.spbstu.icfpc2022.canvas.Color
 import ru.spbstu.icfpc2022.canvas.Point
 import ru.spbstu.icfpc2022.canvas.Shape
+import ru.spbstu.icfpc2022.imageParser.euclid
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.getCanvasColor
 import ru.spbstu.icfpc2022.imageParser.toImage
@@ -19,8 +20,9 @@ import java.io.File
 class OverlayCropTactic(
     task: Task,
     tacticStorage: TacticStorage,
-    val colorTolerance: Int
+    val colorToleranceInt: Int,
 ) : Tactic(task, tacticStorage) {
+    val colorTolerance = colorToleranceInt.toDouble()
 
     private val Point.pixel get() = task.targetImage[x, y]
 
@@ -48,51 +50,59 @@ class OverlayCropTactic(
 
     private val Point.neighbors get() = pointDeltas.map { this + it }
 
+    private fun Color.distance(other: Color): Double = euclid(
+        r - other.r, g - other.g, b - other.b, a - other.a
+    )
 
-    private fun getBoundingBox(shape: Shape, point: Point): Pair<Shape, Set<Point>> {
+
+    private val Point.index: Int get() = x * task.targetImage.width + y
+
+    private fun getBoundingBox(shape: Shape, point: Point): Pair<Shape, BooleanArray> {
         val targetColor = point.pixel.getCanvasColor()
         val queue = ArrayDeque<Point>()
         queue.add(point)
-        val visitedPoints = hashSetOf<Point>()
+        val points = ArrayList<Point>(shape.size.toInt())
+        val visitedPoints = BooleanArray(task.targetImage.width * task.targetImage.height) { false }
         while (queue.isNotEmpty()) {
             val currentPoint = queue.removeFirst()
-            if (!visitedPoints.add(currentPoint)) continue
+            val currentPointIndex = currentPoint.index
+            if (visitedPoints[currentPointIndex]) continue
+            visitedPoints[currentPointIndex] = true
+            points.add(currentPoint)
 
             val availableNeighbours = currentPoint.neighbors
-                .filter { it.isStrictlyInside(shape.lowerLeftInclusive, shape.upperRightExclusive) }
-                .filter { it !in visitedPoints }
-                .filter { approximatelyMatches(it.pixel.getCanvasColor(), targetColor, colorTolerance) }
+                .filter { it.isStrictlyInsideOrLeft(shape.lowerLeftInclusive, shape.upperRightExclusive) }
+                .filterNot { visitedPoints[it.index] }
+                .filter { it.pixel.getCanvasColor().distance(targetColor) <= colorTolerance }
             queue.addAll(availableNeighbours)
         }
 
-        val minX = visitedPoints.minOf { it.x }
-        val minY = visitedPoints.minOf { it.y }
-        val maxXExclusive = visitedPoints.maxOf { it.x + 1 }
-        val maxYExclusive = visitedPoints.maxOf { it.y + 1 }
+        val minX = points.minOf { it.x }
+        val minY = points.minOf { it.y }
+        val maxXExclusive = points.maxOf { it.x + 1 }
+        val maxYExclusive = points.maxOf { it.y + 1 }
         return Shape(Point(minX, minY), Point(maxXExclusive, maxYExclusive)) to visitedPoints
     }
 
 
     override fun invoke(state: PersistentState): PersistentState {
         var blockId = state.canvas.blocks.keys.single()
-        val backgroundColor = storage.get<ColorBackgroundTactic>()?.resultingColor!!
+//        val backgroundColor = storage.get<ColorBackgroundTactic>()?.resultingColor!!
 
         val currentBlock = state.canvas.blocks[blockId]!!
-        val coloredPoints = currentBlock.shape.allPoints.filterNot {
-            approximatelyMatches(
-                it.pixel.getCanvasColor(),
-                backgroundColor,
-                colorTolerance
-            )
-        }
+        val coloredPoints = currentBlock.shape.allPoints//.filterNot {
+//            it.pixel.getCanvasColor().distance(backgroundColor) < colorTolerance
+//        }
 
-        val globalVisitedPoints = mutableSetOf<Point>()
+        val globalVisitedPoints = BooleanArray(task.targetImage.width * task.targetImage.height) { false }
         val shapeColors = mutableMapOf<Shape, Color>()
         for (point in coloredPoints) {
-            if (point in globalVisitedPoints) continue
+            if (globalVisitedPoints[point.index]) continue
             val (shape, visited) = getBoundingBox(currentBlock.shape, point)
             shapeColors[shape] = point.pixel.getCanvasColor()
-            globalVisitedPoints.addAll(visited)
+            for ((index, value) in visited.withIndex()) {
+                globalVisitedPoints[index] = globalVisitedPoints[index] or value
+            }
         }
 
         val sortedShapes = shapeColors.keys.sortedBy { it.size }.toMutableList()
@@ -105,7 +115,6 @@ class OverlayCropTactic(
 
         var currentState = state
 
-        var counter = 100
         for (shapeLevel in shapeLevels) {
             for (shape in shapeLevel) {
 
@@ -115,7 +124,6 @@ class OverlayCropTactic(
                 currentState = cuttedState.move(ColorMove(colorBlockId, shapeColor))
 
                 currentState = MergeToOneTactic(task, storage)(currentState)
-                currentState.canvas.toImage().flipY().forWriter(PngWriter(0)).write(File("solutions/${task.problemId}${counter++}.png"))
                 blockId = currentState.canvas.blocks.keys.single()
             }
         }
@@ -134,10 +142,17 @@ class OverlayCropTactic(
         var currentBlockShape = currentBlock.shape
 
 
-
         val cutPoints = listOf(
-            Triple(shape.lowerLeftInclusive, Shape(currentBlockShape.lowerLeftInclusive, shape.lowerLeftInclusive).size, BlockLocation.UPPER_RIGHT),
-            Triple(shape.upperRightExclusive, Shape(shape.upperRightExclusive, currentBlockShape.upperRightExclusive).size, BlockLocation.BOTTOM_LEFT)
+            Triple(
+                shape.lowerLeftInclusive,
+                Shape(currentBlockShape.lowerLeftInclusive, shape.lowerLeftInclusive).size,
+                BlockLocation.UPPER_RIGHT
+            ),
+            Triple(
+                shape.upperRightExclusive,
+                Shape(shape.upperRightExclusive, currentBlockShape.upperRightExclusive).size,
+                BlockLocation.BOTTOM_LEFT
+            )
         ).sortedByDescending { it.second }.map { it.first to it.third }
 
         for ((cutPoint, blockLocation) in cutPoints) {
@@ -150,7 +165,7 @@ class OverlayCropTactic(
                     currentBlockId,
                     Orientation.Y,
                     cutPoint.y
-                ) to when(blockLocation) {
+                ) to when (blockLocation) {
                     BlockLocation.BOTTOM_LEFT -> currentBlockId + 0
                     BlockLocation.UPPER_RIGHT -> currentBlockId + 1
                 }
@@ -159,12 +174,12 @@ class OverlayCropTactic(
                     currentBlockId,
                     Orientation.X,
                     cutPoint.x
-                ) to when(blockLocation) {
+                ) to when (blockLocation) {
                     BlockLocation.BOTTOM_LEFT -> currentBlockId + 0
                     BlockLocation.UPPER_RIGHT -> currentBlockId + 1
                 }
 
-                else -> PointCutMove(currentBlockId, cutPoint) to when(blockLocation) {
+                else -> PointCutMove(currentBlockId, cutPoint) to when (blockLocation) {
                     BlockLocation.BOTTOM_LEFT -> currentBlockId + 0
                     BlockLocation.UPPER_RIGHT -> currentBlockId + 2
                 }
