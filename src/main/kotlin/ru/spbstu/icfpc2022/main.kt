@@ -8,7 +8,7 @@ import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import tornadofx.launch
 
 fun main() = try {
-    val problemId = 2
+    val problemId = 34
     val problems = getProblems()
     val submissions = submissions()
     val bestSubmissions = submissions.bestSubmissions()
