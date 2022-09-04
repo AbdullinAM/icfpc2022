@@ -13,8 +13,7 @@ import java.util.concurrent.Executors
 data class Parameters(
     val colorTolerance: Int = 25,
     val pixelTolerance: Int = 15,
-    val limit: Int = 7500,
-    val coloringMethod: ColoringMethod = ColoringMethod.AVERAGE
+    val limit: Int = 7500
 ) {
     fun neighbours(): Collection<Parameters> = setOf(
         copy(colorTolerance = (colorTolerance + 2).coerceAtMost(50)),
@@ -23,7 +22,7 @@ data class Parameters(
         copy(pixelTolerance = (pixelTolerance - 1).coerceAtLeast(10)),
         copy(limit = (limit + 500).coerceAtMost(16000)),
         copy(limit = (limit - 500).coerceAtLeast(500)),
-    ) + ColoringMethod.values().filter { it != coloringMethod }.map { copy(coloringMethod = it) }
+    )
 }
 
 fun main(args: Array<String>) {
@@ -74,7 +73,6 @@ fun main(args: Array<String>) {
                                         colorTolerance,
                                         pixelTolerance * 0.05,
                                         limit.toLong(),
-                                        it.coloringMethod
                                     )
                                     val solution = rectangleCropDummy.solve()
                                     if (solution.score < task.bestScoreOrMax) {

@@ -32,20 +32,18 @@ fun main(args: Array<String>) {
                     forEachAsync((10..20)) { pixelTolerance ->
                         forEachAsync((generateSequence(500) { it + 500 }.take(32).asIterable())) { limit ->
                             run {
-                                forEachAsync(ColoringMethod.values().asList()) { coloringMethod ->
+                                run {
                                     try {
                                         println(
                                             "Parameters: colorTolerance = $colorTolerance," +
                                                     " pixelTolerance = ${pixelTolerance * 0.05}, " +
-                                                    "limit = $limit, " +
-                                                    "coloringMethod = $coloringMethod"
+                                                    "limit = $limit, "
                                         )
                                         val rectangleCropDummy = RectangleCropDummy(
                                             task,
                                             colorTolerance,
                                             pixelTolerance * 0.05,
-                                            limit.toLong(),
-                                            coloringMethod
+                                            limit.toLong()
                                         )
                                         val solution = rectangleCropDummy.solve()
                                         println("${solution.score} | ${if (solution.score >= task.bestScoreOrMax) "worse" else "better"} | ${task.bestScoreOrMax}")
@@ -53,8 +51,7 @@ fun main(args: Array<String>) {
                                             println(
                                                 "Succeeded with parameters: colorTolerance = $colorTolerance, " +
                                                         "pixelTolerance = ${pixelTolerance * 0.05}," +
-                                                        " limit = $limit," +
-                                                        "coloringMethod = $coloringMethod"
+                                                        " limit = $limit,"
                                             )
                                             val dumper = DumpSolutions(task, TacticStorage())
                                             dumper(solution)
@@ -62,8 +59,7 @@ fun main(args: Array<String>) {
                                             val preamble =
                                                 "# bruteForce, parameters: colorTolerance = $colorTolerance, " +
                                                         "pixelTolerance = ${pixelTolerance * 0.05}," +
-                                                        " limit = $limit," +
-                                                        "coloringMethod = $coloringMethod\n"
+                                                        " limit = $limit\n"
                                             submit(problem.id, solution.commands.joinToString("\n", prefix = preamble))
                                             task =
                                                 Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
@@ -72,8 +68,7 @@ fun main(args: Array<String>) {
                                         System.err.println(
                                             "Failed with parameters: colorTolerance = $colorTolerance, " +
                                                     "pixelTolerance = ${pixelTolerance * 0.05}, " +
-                                                    "limit = $limit, " +
-                                                    "coloringMethod = $coloringMethod"
+                                                    "limit = $limit"
                                         )
                                     }
                                 }

@@ -423,3 +423,20 @@ fun colorBlock(state: PersistentState, blockId: BlockId, color: Color, colorTole
     return state.move(ColorMove(blockId, color))
 }
 
+fun colorBlockToAverage(state: PersistentState, blockId: BlockId, colorTolerance: Int, coloringMethod: ColoringMethod): PersistentState {
+    val image = state.task.targetImage
+    val shape = state.canvas.blocks[blockId]!!.shape
+    val color = when (coloringMethod) {
+        ColoringMethod.AVERAGE -> computeBlockAverage(image, shape)
+        ColoringMethod.MEDIAN -> computeBlockMedian(image, shape)
+        ColoringMethod.MAX -> computeBlockMax(image, shape)
+        ColoringMethod.GEOMETRIC_MEDIAN -> computeBlockGeometricMedianApproximated(image, shape)
+    }
+    return colorBlock(state, blockId, color, colorTolerance)
+}
+
+fun colorBlockToAverageBest(state: PersistentState, blockId: BlockId, colorTolerance: Int): PersistentState {
+    return ColoringMethod.values().map {
+        colorBlockToAverage(state, blockId, colorTolerance, it)
+    }.minBy { it.score }
+}

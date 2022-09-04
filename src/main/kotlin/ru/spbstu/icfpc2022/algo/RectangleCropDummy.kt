@@ -14,7 +14,7 @@ class RectangleCropDummy(
     val colorTolerance: Int = 17,
     val pixelTolerance: Double = 0.95,
     val limit: Long = 5000L,
-    val coloringMethod: ColoringMethod = ColoringMethod.AVERAGE
+    //val coloringMethod: ColoringMethod = ColoringMethod.AVERAGE
 ) : Solver(task) {
     override fun solve(): PersistentState {
         var state = task.initialState
@@ -30,7 +30,7 @@ class RectangleCropDummy(
         val autocropTactic = AutocropTactic(task, storage, colorTolerance, pixelTolerance)
         state = autocropTactic(state, SimpleId(state.canvas.blockId))
 
-        val rectangleCropTactic = RectangleCropTactic(task, storage, colorTolerance, pixelTolerance, limit, coloringMethod)
+        val rectangleCropTactic = RectangleCropTactic(task, storage, colorTolerance, pixelTolerance, limit)
         for (left in autocropTactic.leftBlocks) {
             state = rectangleCropTactic(state, left)
         }
@@ -42,7 +42,6 @@ class RectangleCropDummy(
             storage,
             limit,
             colorTolerance,
-            coloringMethod
         )
         for (left in rectangleCropTactic.leftBlocks) {
             state = dummyCutter.invoke(state, left)
