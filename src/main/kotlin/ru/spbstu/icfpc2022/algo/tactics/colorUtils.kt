@@ -236,22 +236,22 @@ fun computeNotBlockGeometricMedianApproximated(image: ImmutableImage, shape: Sha
     var rAvgCnt = 0.0
     var rMin = Int.MAX_VALUE
     var rMax = Int.MIN_VALUE
-    val rData = IntArray(shape.size.toInt())
+    val rData = ArrayList<Int>((image.width * image.height) - shape.size.toInt() + 2)
 
     var gAvgCnt = 0.0
     var gMin = Int.MAX_VALUE
     var gMax = Int.MIN_VALUE
-    val gData = IntArray(shape.size.toInt())
+    val gData = ArrayList<Int>((image.width * image.height) - shape.size.toInt() + 2)
 
     var bAvgCnt = 0.0
     var bMin = Int.MAX_VALUE
     var bMax = Int.MIN_VALUE
-    val bData = IntArray(shape.size.toInt())
+    val bData = ArrayList<Int>((image.width * image.height) - shape.size.toInt() + 2)
 
     var aAvgCnt = 0.0
     var aMin = Int.MAX_VALUE
     var aMax = Int.MIN_VALUE
-    val aData = IntArray(shape.size.toInt())
+    val aData = ArrayList<Int>((image.width * image.height) - shape.size.toInt() + 2)
 
     var idx = 0
     for (x in 0 until image.width) {
@@ -259,10 +259,10 @@ fun computeNotBlockGeometricMedianApproximated(image: ImmutableImage, shape: Sha
             if (Point(x, y).isStrictlyInside(shape.lowerLeftInclusive, shape.upperRightExclusive)) continue
 
             val pixel = image[x, y]
-            rData[idx] = pixel.red()
-            gData[idx] = pixel.green()
-            bData[idx] = pixel.blue()
-            aData[idx] = pixel.alpha()
+            rData.add(pixel.red())
+            gData.add(pixel.green())
+            bData.add(pixel.blue())
+            aData.add(pixel.alpha())
 
             rAvgCnt += rData[idx]
             rMin = minOf(rMin, rData[idx])
@@ -302,10 +302,10 @@ fun computeNotBlockGeometricMedianApproximated(image: ImmutableImage, shape: Sha
         gAvg,
         bAvg,
         aAvg,
-        rData,
-        gData,
-        bData,
-        aData
+        rData.toIntArray(),
+        gData.toIntArray(),
+        bData.toIntArray(),
+        aData.toIntArray()
     )
 }
 
