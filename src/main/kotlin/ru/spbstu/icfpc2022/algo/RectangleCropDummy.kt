@@ -3,7 +3,11 @@ package ru.spbstu.icfpc2022.algo
 import ru.spbstu.icfpc2022.algo.tactics.*
 import ru.spbstu.icfpc2022.canvas.SimpleId
 
-enum class CuttingTactic { DUMB, DUMBSNAP, EXHAUSTIVE }
+enum class CuttingTactic {
+    DUMB,
+    DUMBSNAP,
+//    EXHAUSTIVE
+}
 
 class RectangleCropDummy(
     task: Task,
@@ -32,30 +36,46 @@ class RectangleCropDummy(
             state = rectangleCropTactic(state, left)
         }
 
-        val previousBlocks = state.canvas.blocks.keys
-        val cutterCreator = when (cuttingTactic) {
-            CuttingTactic.EXHAUSTIVE -> ::ExhaustiveCutter
-            CuttingTactic.DUMBSNAP -> ::DummyCutterWithSnaps
-            else -> ::DummyCutter
+        val cutterCreator =  when (cuttingTactic) {
+            CuttingTactic.DUMBSNAP -> ::DummyColoringCutterWithSnaps
+            else -> ::DummyColoringCutter
         }
 
         val dummyCutter = cutterCreator(
             task,
             storage,
             limit,
-            colorTolerance
+            colorTolerance,
+            coloringMethod
         )
         for (left in rectangleCropTactic.leftBlocks) {
             state = dummyCutter.invoke(state, left)
         }
 
-        val merger = MergerTactic(task, storage)
-        state = merger(state)
 
-        val coloringBlocks = state.canvas.blocks.keys - previousBlocks
-        for (block in coloringBlocks) {
-            state = ColorAverageTactic(task, storage, colorTolerance, coloringMethod)(state, block)
-        }
+//        val cutterCreator = when (cuttingTactic) {
+//            CuttingTactic.EXHAUSTIVE -> ::ExhaustiveCutter
+//            CuttingTactic.DUMBSNAP -> ::DummyColoringCutterWithSnaps
+//            else -> ::DummyColoringCutter
+//        }
+//
+//        val dummyCutter = cutterCreator(
+//            task,
+//            storage,
+//            limit,
+//            colorTolerance
+//        )
+//        for (left in rectangleCropTactic.leftBlocks) {
+//            state = dummyCutter.invoke(state, left)
+//        }
+//
+//        val merger = MergerTactic(task, storage)
+//        state = merger(state)
+//
+//        val coloringBlocks = state.canvas.blocks.keys - previousBlocks
+//        for (block in coloringBlocks) {
+//            state = ColorAverageTactic(task, storage, colorTolerance, coloringMethod)(state, block)
+//        }
 
         return state
     }
