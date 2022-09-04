@@ -165,8 +165,8 @@ class PersistentState(
 
     fun move(move: Move, ignoreUI: Boolean = false): PersistentState {
         val newCost = cost + canvas.costOf(move)
-        val newSimilarity = similarityCounter?.let { canvas.updateSimilarity(move, it) }
         val newCanvas = canvas.apply(move)
+        val newSimilarity = similarityCounter?.let { newCanvas.updateSimilarity(move, it) }
         return PersistentState(task, newCanvas, commands.add(move), newSimilarity, newCost)
             .also {
                 if (!ignoreUI && !StateCollector.turnMeOff) StateCollector.commandToCanvas.add(
