@@ -8,6 +8,8 @@ import ru.spbstu.icfpc2022.canvas.Shape
 import ru.spbstu.icfpc2022.imageParser.color
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.getCanvasColor
+import ru.spbstu.icfpc2022.move.LineCutMove
+import ru.spbstu.icfpc2022.move.Orientation
 import ru.spbstu.icfpc2022.move.PointCutMove
 
 open class DummyColoringCutter(
@@ -17,7 +19,6 @@ open class DummyColoringCutter(
     val colorTolerance: Int,
     val coloringMethod: ColoringMethod
 ) : BlockTactic(task, tacticStorage) {
-    open val useSnaps: Boolean = false
 
     private fun allOneColour(shape: Shape): Boolean {
         val color = task.targetImage[shape.lowerLeftInclusive.x, shape.lowerLeftInclusive.y].getCanvasColor()
@@ -47,38 +48,31 @@ open class DummyColoringCutter(
 
         var middlePoint = currentBlock.shape.middle
 
-        if (useSnaps) {
-            when (val snap = task.closestCornerSnap(middlePoint, currentBlock.shape)) {
-                is Point -> middlePoint = snap
-                else -> when (val snap = task.closestSnap(middlePoint, currentBlock.shape)) {
-                    null -> {}
-                    else -> middlePoint = snap
+        val snapPoint = task.closestCornerSnap(middlePoint, currentBlock.shape)
+            ?: task.closestSnap(middlePoint, currentBlock.shape)
+        for (cut in
+            buildSet {
+                add(PointCutMove(blockId, middlePoint))
+                add(LineCutMove(blockId, Orientation.X, middlePoint.x))
+                add(LineCutMove(blockId, Orientation.Y, middlePoint.y))
+                if (snapPoint != null) {
+                    add(PointCutMove(blockId, snapPoint))
+                    add(LineCutMove(blockId, Orientation.X, snapPoint.x))
+                    add(LineCutMove(blockId, Orientation.Y, snapPoint.y))
                 }
             }
+        ) {
+            val blocksBefore = state.canvas.blocks.keys
+            var cuttedState = state.move(cut, ignoreUI = true)
+            val blocksAfter = cuttedState.canvas.blocks.keys
+            val cuttedBlocks = blocksAfter - blocksBefore
+            for (cuttedBlock in cuttedBlocks) {
+                cuttedState = colorBlockOptions(cuttedState, cuttedBlock).minBy { it.score }
+            }
+            candidates.add(cuttedState)
         }
 
-        val cut = PointCutMove(blockId, middlePoint)
-        val blocksBefore = state.canvas.blocks.keys
-        var cuttedState = state.move(cut)
-        val blocksAfter = cuttedState.canvas.blocks.keys
-        val cuttedBlocks = blocksAfter - blocksBefore
-        for (cuttedBlock in cuttedBlocks) {
-            cuttedState = colorBlockOptions(cuttedState, cuttedBlock).minBy { it.score }
-        }
-        candidates.add(cuttedState)
         return candidates
     }
 
-}
-
-
-class DummyColoringCutterWithSnaps(
-    task: Task,
-    tacticStorage: TacticStorage,
-    limit: Long,
-    colorTolerance: Int,
-    coloringMethod: ColoringMethod
-) : DummyColoringCutter(task, tacticStorage, limit, colorTolerance, coloringMethod) {
-    override val useSnaps: Boolean
-        get() = true
 }
