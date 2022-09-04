@@ -108,8 +108,7 @@ class AutocropTactic2(
             }
 
             for (bestCrop in crops) {
-                val colorMove = ColorMove(autocropState.block, bestCrop.first)
-                var newState = autocropState.state.move(colorMove)
+                var newState = colorBlock(autocropState.state, autocropState.block, bestCrop.first, colorTolerance)
 
                 val newBlockShape = Shape(
                     bestCrop.second.lowerLeftInclusive.add(shape.lowerLeftInclusive),
