@@ -8,6 +8,7 @@ import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import java.net.URL
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.Executors
 
 data class Parameters(
     val colorTolerance: Int = 25,
@@ -38,15 +39,15 @@ fun main(args: Array<String>) {
             else -> taskSpec.map { it.toInt() }
         }
         runBlocking {
-            withContext(Dispatchers.Default) {
+            withContext(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2).asCoroutineDispatcher()) {
                 forEachAsync(taskIds) { taskId ->
-                    forEachAsync(CuttingTactic.values().asList()) { cuttingTactic ->
-                        val problem = problems.first { it.id == taskId }
-                        val im = problem.target
-                        val bestScore = bestSubmissions[problem.id]?.score
-                        var task = Task(problem.id, im, problem.initialConfig, bestScore = bestScore)
-                        StateCollector.turnMeOff = true
+                    val problem = problems.first { it.id == taskId }
+                    val im = problem.target
+                    val bestScore = bestSubmissions[problem.id]?.score
+                    var task = Task(problem.id, im, problem.initialConfig, bestScore = bestScore)
+                    StateCollector.turnMeOff = true
 
+                    forEachAsync(CuttingTactic.values().asList()) { cuttingTactic ->
                         val visited: MutableSet<Parameters> = Collections.synchronizedSet(mutableSetOf<Parameters>())
                         val pending: MutableSet<Parameters> = Collections.synchronizedSet(mutableSetOf<Parameters>())
 
