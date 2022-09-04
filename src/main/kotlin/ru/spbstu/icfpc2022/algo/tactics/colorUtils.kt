@@ -195,26 +195,65 @@ fun computeBlockGeometricMedianApproximated(image: ImmutableImage, shape: Shape)
         }
     }
 
-    val searchR = rMin != rMax
-    val searchG = gMin != gMax
-    val searchB = bMin != bMax
-    val searchA = aMin != aMax
-
-    if (!searchR && !searchG && !searchB && !searchA) {
-        return Color(rMin, gMin, bMin, aMin)
-    }
-
     val rAvg = round(rAvgCnt / idx).toInt()
     val gAvg = round(gAvgCnt / idx).toInt()
     val bAvg = round(bAvgCnt / idx).toInt()
     val aAvg = round(aAvgCnt / idx).toInt()
 
-    val avgDistance = distance(rData, gData, bData, aData, rAvg, gAvg, bAvg, aAvg)
+    return approximateGeometricMedian(
+        rMin,
+        rMax,
+        gMin,
+        gMax,
+        bMin,
+        bMax,
+        aMin,
+        aMax,
+        rAvg,
+        gAvg,
+        bAvg,
+        aAvg,
+        rData,
+        gData,
+        bData,
+        aData
+    )
+}
+
+private fun approximateGeometricMedian(
+    rMin: Int,
+    rMax: Int,
+    gMin: Int,
+    gMax: Int,
+    bMin: Int,
+    bMax: Int,
+    aMin: Int,
+    aMax: Int,
+    rAvg: Int,
+    gAvg: Int,
+    bAvg: Int,
+    aAvg: Int,
+    rData: IntArray,
+    gData: IntArray,
+    bData: IntArray,
+    aData: IntArray
+): Color {
+    val searchR = rMin != rMax
+    val searchG = gMin != gMax
+    val searchB = bMin != bMax
+    val searchA = aMin != aMax
 
     var bestR = rAvg
     var bestG = gAvg
     var bestB = bAvg
     var bestA = aAvg
+
+    if (!searchR && !searchG && !searchB && !searchA) {
+        Color(bestR, bestG, bestB, bestA)
+    }
+
+    val avgDistance = distance(rData, gData, bData, aData, rAvg, gAvg, bAvg, aAvg)
+
     var bestDist = avgDistance
     var step = intArrayOf(rMax - rMin, gMax - gMin, bMax - bMin, aMax - aMin).average()
 
