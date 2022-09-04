@@ -60,7 +60,7 @@ fun main(args: Array<String>) {
                                         val preamble = "# bruteForce, parameters: colorTolerance = $colorTolerance, " +
                                                 "pixelTolerance = ${pixelTolerance * 0.05}," +
                                                 " limit = $limit," +
-                                                " cutterTactic = $cutterTactic"
+                                                " cutterTactic = $cutterTactic\n"
                                         submit(problem.id, solution.commands.joinToString("\n", prefix = preamble))
                                         task = Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
                                     }
