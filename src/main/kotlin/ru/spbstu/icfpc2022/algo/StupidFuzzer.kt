@@ -57,7 +57,7 @@ class StupidFuzzer(
         val initState = bestState.get().state
         var currentState = initState
 
-        if (iteration == 0) {
+        if (iteration == 0 && Random.nextBoolean()) {
             val randomBlock = currentState.canvas.randomBlock() ?: return
             val color = computeBlockAverage(currentState.task.targetImage, randomBlock.shape)
             val move = ColorMove(randomBlock.id, color)
@@ -79,14 +79,26 @@ class StupidFuzzer(
 
             if (!shouldContinueIteration(iteration, ind, currentStateScore, taskBestScore)) return
 
-            val newState = if (Random.nextDouble() > 0.3) {
-                val randomCutBlock = currentState.canvas.randomBlock() ?: return
-                val (cutState, cutBlocks) = randomCut(randomCutBlock, currentState) ?: continue
-                val randomColorBlock = cutState.canvas.randomBlock(cutBlocks) ?: continue
-                randomColor(randomColorBlock, cutState)
-            } else {
-                val randomColorBlock = currentState.canvas.randomBlock() ?: return
-                randomColor(randomColorBlock, currentState)
+            val newState = when (Random.nextInt(0, 10)) {
+                1, 2, 3, 4 -> {
+                    val randomCutBlock = currentState.canvas.randomBlock() ?: return
+                    val (cutState, cutBlocks) = randomCut(randomCutBlock, currentState) ?: continue
+                    val randomColorBlock = cutState.canvas.randomBlock(cutBlocks) ?: continue
+                    randomColor(randomColorBlock, cutState)
+                }
+                5, 6 -> {
+                    val randomColorBlock = currentState.canvas.randomBlock() ?: return
+                    randomColor(randomColorBlock, currentState)
+                }
+                7, 8 -> {
+                    val randomMergeBlock = currentState.canvas.randomBlock() ?: return
+                    randomMerge(randomMergeBlock, currentState) ?: continue
+                }
+                9 -> {
+                    val randomSwapBlock = currentState.canvas.randomBlock() ?: return
+                    randomSwap(randomSwapBlock, currentState) ?: continue
+                }
+                else -> continue
             }
 
             val newStateScore = newState.score
@@ -125,6 +137,27 @@ class StupidFuzzer(
         //if (ind == 300 && coloredStateScore.toDouble() / task.bestScore!!.toDouble() > 1.05) return currentState
         //if (ind == 400 && coloredStateScore.toDouble() / task.bestScore!!.toDouble() > 1.1) return currentState
         return true
+    }
+
+    fun adjacent(shape1: Shape, shape2: Shape) =
+        shape1.isVerticallyAligned(shape2) || shape1.isHorizontallyAligned(shape2)
+
+    private fun randomMerge(randomBlock: Block, currentState: PersistentState): PersistentState? {
+        val adjacentBlock = currentState.canvas.blocks.values
+            .filter { it.id != randomBlock.id && adjacent(it.shape, randomBlock.shape) }
+            .randomOrNull() ?: return null
+        return currentState.move(MergeMove(randomBlock.id, adjacentBlock.id))
+    }
+
+    private fun randomSwap(randomBlock: Block, currentState: PersistentState): PersistentState? {
+        val swapWithBlock = currentState.canvas.blocks.values
+            .filter {
+                it.id != randomBlock.id
+                        && it.shape.width == randomBlock.shape.width
+                        && it.shape.height == randomBlock.shape.height
+            }
+            .randomOrNull() ?: return null
+        return currentState.move(SwapMove(randomBlock.id, swapWithBlock.id))
     }
 
     private fun randomCut(randomBlock: Block, currentState: PersistentState): Pair<PersistentState, Set<BlockId>>? {
