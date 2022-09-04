@@ -62,3 +62,4 @@ fun buildFatJar(name: String, mainClass: String) = task("fatJar$name", type = Ja
 
 val bruteforceJar = buildFatJar("bruteforce", icfpcMainClassName)
 val fuzzerJar = buildFatJar("fuzzer", "ru.spbstu.icfpc2022.FuzzerKt")
+val directedBruteForceJar = buildFatJar("directedBruteforce", "ru.spbstu.icfpc2022.DirectedBruteforceKt")
