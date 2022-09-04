@@ -315,15 +315,8 @@ class AutocropTactic(
             )
 
             val bestCropAverage = computeNotBlockGeometricMedianApproximated(autocropState.image, newBlockShape)
-//            val bestCropAverage = computeNotBlockAverage(autocropState.image, newBlockShape)
 
-            val bgColor = backgroundTactic?.resultingColor
-
-            var newState = when {
-                bgColor != null && approximatelyMatches(bgColor, bestCropAverage, colorTolerance) ->
-                    autocropState.state
-                else -> autocropState.state.move(ColorMove(autocropState.block, bestCropAverage))
-            }
+            var newState = colorBlock(autocropState.state, autocropState.block, bestCropAverage, colorTolerance)
 
             var nextBlock = autocropState.block
 

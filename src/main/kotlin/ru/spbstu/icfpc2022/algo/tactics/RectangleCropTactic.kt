@@ -225,14 +225,9 @@ class RectangleCropTactic(
                     b.shape.lowerLeftInclusive == currentBlock.shape.lowerLeftInclusive
                 }
 
-                val backgroundColor = tacticStorage.get<ColorBackgroundTactic>()?.resultingColor
                 val averageColor = computeAverageColor(task.targetImage, cropShape, coloringMethod)
 
-                state = when {
-                    backgroundColor != null
-                            && approximatelyMatches(backgroundColor, averageColor, colorTolerance) -> newState
-                    else -> newState.move(ColorMove(coloringBlock, averageColor))
-                }
+                state = colorBlock(newState, coloringBlock, averageColor, colorTolerance)
 
                 queue.addAll(createdBlocks - coloringBlock)
                 continue@upperLoop
