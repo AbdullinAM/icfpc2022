@@ -4,7 +4,6 @@ import ru.spbstu.icfpc2022.algo.tactics.*
 import ru.spbstu.icfpc2022.canvas.SimpleId
 
 enum class CuttingTactic { DUMB, DUMBSNAP, EXHAUSTIVE }
-enum class ColoringMethod { AVERAGE, MEDIAN, MAX, GEOMETRIC_MEDIAN }
 
 class RectangleCropDummy(
     task: Task,
@@ -28,7 +27,7 @@ class RectangleCropDummy(
         val autocropTactic = AutocropTactic(task, storage, colorTolerance, pixelTolerance)
         state = autocropTactic(state, SimpleId(state.canvas.blockId))
 
-        val rectangleCropTactic = RectangleCropTactic(task, storage, colorTolerance, pixelTolerance, limit)
+        val rectangleCropTactic = RectangleCropTactic(task, storage, colorTolerance, pixelTolerance, limit, coloringMethod)
         for (left in autocropTactic.leftBlocks) {
             state = rectangleCropTactic(state, left)
         }

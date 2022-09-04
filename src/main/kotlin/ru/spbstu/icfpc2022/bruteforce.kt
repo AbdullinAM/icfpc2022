@@ -1,10 +1,8 @@
 package ru.spbstu.icfpc2022
 
 import kotlinx.coroutines.*
-import ru.spbstu.icfpc2022.algo.AutocropDummy
-import ru.spbstu.icfpc2022.algo.CuttingTactic
-import ru.spbstu.icfpc2022.algo.RectangleCropDummy
-import ru.spbstu.icfpc2022.algo.Task
+import ru.spbstu.icfpc2022.algo.*
+import ru.spbstu.icfpc2022.algo.tactics.ColoringMethod
 import ru.spbstu.icfpc2022.algo.tactics.DumpSolutions
 import ru.spbstu.icfpc2022.algo.tactics.TacticStorage
 import ru.spbstu.icfpc2022.robovinchi.StateCollector
@@ -34,41 +32,55 @@ fun main(args: Array<String>) {
                     forEachAsync((10..20)) { pixelTolerance ->
                         forEachAsync((generateSequence(500) { it + 500 }.take(32).asIterable())) { limit ->
                             forEachAsync(CuttingTactic.values().asList()) { cutterTactic ->
-                                try {
-                                    println("Parameters: colorTolerance = $colorTolerance," +
-                                            " pixelTolerance = ${pixelTolerance * 0.05}, " +
-                                            "limit = $limit, " +
-                                            "cutterTactic = $cutterTactic"
-                                    )
-                                    val rectangleCropDummy = RectangleCropDummy(
-                                        task,
-                                        colorTolerance,
-                                        pixelTolerance * 0.05,
-                                        limit.toLong(),
-                                        cutterTactic
-                                    )
-                                    val solution = rectangleCropDummy.solve()
-                                    println("${solution.score} | ${if (solution.score >= task.bestScoreOrMax) "worse" else "better"} | ${task.bestScoreOrMax}")
-                                    if (solution.score < task.bestScoreOrMax) {
-                                        println("Succeeded with parameters: colorTolerance = $colorTolerance, " +
-                                                "pixelTolerance = ${pixelTolerance * 0.05}," +
-                                                " limit = $limit," +
-                                                " cutterTactic = $cutterTactic")
-                                        val dumper = DumpSolutions(task, TacticStorage())
-                                        dumper(solution)
+                                forEachAsync(ColoringMethod.values().asList()) { coloringMethod ->
+                                    try {
+                                        println(
+                                            "Parameters: colorTolerance = $colorTolerance," +
+                                                    " pixelTolerance = ${pixelTolerance * 0.05}, " +
+                                                    "limit = $limit, " +
+                                                    "cutterTactic = $cutterTactic, " +
+                                                    "coloringMethod = $coloringMethod"
+                                        )
+                                        val rectangleCropDummy = RectangleCropDummy(
+                                            task,
+                                            colorTolerance,
+                                            pixelTolerance * 0.05,
+                                            limit.toLong(),
+                                            cutterTactic,
+                                            coloringMethod
+                                        )
+                                        val solution = rectangleCropDummy.solve()
+                                        println("${solution.score} | ${if (solution.score >= task.bestScoreOrMax) "worse" else "better"} | ${task.bestScoreOrMax}")
+                                        if (solution.score < task.bestScoreOrMax) {
+                                            println(
+                                                "Succeeded with parameters: colorTolerance = $colorTolerance, " +
+                                                        "pixelTolerance = ${pixelTolerance * 0.05}," +
+                                                        " limit = $limit," +
+                                                        "cutterTactic = $cutterTactic, " +
+                                                        "coloringMethod = $coloringMethod"
+                                            )
+                                            val dumper = DumpSolutions(task, TacticStorage())
+                                            dumper(solution)
 
-                                        val preamble = "# bruteForce, parameters: colorTolerance = $colorTolerance, " +
-                                                "pixelTolerance = ${pixelTolerance * 0.05}," +
-                                                " limit = $limit," +
-                                                " cutterTactic = $cutterTactic\n"
-                                        submit(problem.id, solution.commands.joinToString("\n", prefix = preamble))
-                                        task = Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
+                                            val preamble =
+                                                "# bruteForce, parameters: colorTolerance = $colorTolerance, " +
+                                                        "pixelTolerance = ${pixelTolerance * 0.05}," +
+                                                        " limit = $limit," +
+                                                        "cutterTactic = $cutterTactic, " +
+                                                        "coloringMethod = $coloringMethod"
+                                            submit(problem.id, solution.commands.joinToString("\n", prefix = preamble))
+                                            task =
+                                                Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
+                                        }
+                                    } catch (e: Throwable) {
+                                        System.err.println(
+                                            "Failed with parameters: colorTolerance = $colorTolerance, " +
+                                                    "pixelTolerance = ${pixelTolerance * 0.05}, " +
+                                                    "limit = $limit, " +
+                                                    "cutterTactic = $cutterTactic, " +
+                                                    "coloringMethod = $coloringMethod"
+                                        )
                                     }
-                                } catch (e: Throwable) {
-                                    System.err.println("Failed with parameters: colorTolerance = $colorTolerance, " +
-                                            "pixelTolerance = ${pixelTolerance * 0.05}, " +
-                                            "limit = $limit, " +
-                                            "cutterTactic = $cutterTactic")
                                 }
                             }
                         }

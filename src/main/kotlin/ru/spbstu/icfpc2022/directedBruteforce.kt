@@ -2,6 +2,7 @@ package ru.spbstu.icfpc2022
 
 import kotlinx.coroutines.*
 import ru.spbstu.icfpc2022.algo.*
+import ru.spbstu.icfpc2022.algo.tactics.ColoringMethod
 import ru.spbstu.icfpc2022.imageParser.parseImage
 import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import java.net.URL

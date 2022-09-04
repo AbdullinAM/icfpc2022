@@ -1,22 +1,10 @@
 package ru.spbstu.icfpc2022.algo.tactics
 
-import com.sksamuel.scrimage.ImmutableImage
-import ru.spbstu.icfpc2022.algo.ColoringMethod
 import ru.spbstu.icfpc2022.algo.PersistentState
 import ru.spbstu.icfpc2022.algo.Task
 import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic.Companion.approximatelyMatches
 import ru.spbstu.icfpc2022.canvas.*
-import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.move.ColorMove
-
-fun computeAverageColor(image: ImmutableImage, shape: Shape, coloringMethod: ColoringMethod): Color {
-    return when (coloringMethod) {
-        ColoringMethod.AVERAGE -> computeBlockAverage(image, shape)
-        ColoringMethod.MEDIAN -> computeBlockMedian(image, shape)
-        ColoringMethod.MAX -> computeBlockMax(image, shape)
-        ColoringMethod.GEOMETRIC_MEDIAN -> computeBlockGeometricMedianApproximated(image, shape)
-    }
-}
 
 class ColorAverageTactic(
     task: Task,

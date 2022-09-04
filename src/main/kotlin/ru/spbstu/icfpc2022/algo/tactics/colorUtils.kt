@@ -10,6 +10,8 @@ import ru.spbstu.icfpc2022.imageParser.getCanvasColor
 import kotlin.math.round
 import kotlin.math.sqrt
 
+enum class ColoringMethod { AVERAGE, MEDIAN, MAX, GEOMETRIC_MEDIAN }
+
 fun digest(image: ImmutableImage, shape: Shape, color: Color): Double {
     var total = 0.0
     for (x in shape.lowerLeftInclusive.x until shape.upperRightExclusive.x) {
@@ -21,6 +23,15 @@ fun digest(image: ImmutableImage, shape: Shape, color: Color): Double {
         }
     }
     return total
+}
+
+fun computeAverageColor(image: ImmutableImage, shape: Shape, coloringMethod: ColoringMethod): Color {
+    return when (coloringMethod) {
+        ColoringMethod.AVERAGE -> computeBlockAverage(image, shape)
+        ColoringMethod.MEDIAN -> computeBlockMedian(image, shape)
+        ColoringMethod.MAX -> computeBlockMax(image, shape)
+        ColoringMethod.GEOMETRIC_MEDIAN -> computeBlockGeometricMedianApproximated(image, shape)
+    }
 }
 
 fun computeBlockAverage(image: ImmutableImage, shape: Shape): Color {
@@ -169,6 +180,84 @@ fun computeBlockGeometricMedianApproximated(image: ImmutableImage, shape: Shape)
     var idx = 0
     for (x in shape.lowerLeftInclusive.x until shape.upperRightExclusive.x) {
         for (y in shape.lowerLeftInclusive.y until shape.upperRightExclusive.y) {
+            val pixel = image[x, y]
+            rData[idx] = pixel.red()
+            gData[idx] = pixel.green()
+            bData[idx] = pixel.blue()
+            aData[idx] = pixel.alpha()
+
+            rAvgCnt += rData[idx]
+            rMin = minOf(rMin, rData[idx])
+            rMax = maxOf(rMax, rData[idx])
+
+            gAvgCnt += gData[idx]
+            gMin = minOf(gMin, gData[idx])
+            gMax = maxOf(gMax, gData[idx])
+
+            bAvgCnt += bData[idx]
+            bMin = minOf(bMin, bData[idx])
+            bMax = maxOf(bMax, bData[idx])
+
+            aAvgCnt += aData[idx]
+            aMin = minOf(aMin, aData[idx])
+            aMax = maxOf(aMax, aData[idx])
+
+            idx++
+        }
+    }
+
+    val rAvg = round(rAvgCnt / idx).toInt()
+    val gAvg = round(gAvgCnt / idx).toInt()
+    val bAvg = round(bAvgCnt / idx).toInt()
+    val aAvg = round(aAvgCnt / idx).toInt()
+
+    return approximateGeometricMedian(
+        rMin,
+        rMax,
+        gMin,
+        gMax,
+        bMin,
+        bMax,
+        aMin,
+        aMax,
+        rAvg,
+        gAvg,
+        bAvg,
+        aAvg,
+        rData,
+        gData,
+        bData,
+        aData
+    )
+}
+
+
+fun computeNotBlockGeometricMedianApproximated(image: ImmutableImage, shape: Shape): Color {
+    var rAvgCnt = 0.0
+    var rMin = Int.MAX_VALUE
+    var rMax = Int.MIN_VALUE
+    val rData = IntArray(shape.size.toInt())
+
+    var gAvgCnt = 0.0
+    var gMin = Int.MAX_VALUE
+    var gMax = Int.MIN_VALUE
+    val gData = IntArray(shape.size.toInt())
+
+    var bAvgCnt = 0.0
+    var bMin = Int.MAX_VALUE
+    var bMax = Int.MIN_VALUE
+    val bData = IntArray(shape.size.toInt())
+
+    var aAvgCnt = 0.0
+    var aMin = Int.MAX_VALUE
+    var aMax = Int.MIN_VALUE
+    val aData = IntArray(shape.size.toInt())
+
+    var idx = 0
+    for (x in 0 until image.width) {
+        for (y in 0 until image.height) {
+            if (Point(x, y).isStrictlyInside(shape.lowerLeftInclusive, shape.upperRightExclusive)) continue
+
             val pixel = image[x, y]
             rData[idx] = pixel.red()
             gData[idx] = pixel.green()
