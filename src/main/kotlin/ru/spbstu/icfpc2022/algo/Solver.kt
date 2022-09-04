@@ -155,8 +155,8 @@ data class Task(
             LineCutMove::class to 7L,
             PointCutMove::class to 10L,
             ColorMove::class to 5L,
-            MergeMove::class to 3L,
-            SwapMove::class to 1L
+            MergeMove::class to 1L,
+            SwapMove::class to 3L
         )
 
         private val baseConstAfter35 = mapOf(
