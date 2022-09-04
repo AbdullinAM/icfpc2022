@@ -269,7 +269,7 @@ val Task.initialState: PersistentState
     get() = PersistentState(
         this,
         initialCanvas
-    )
+    ).withIncrementalSimilarity()
 
 abstract class Solver(
     val task: Task
