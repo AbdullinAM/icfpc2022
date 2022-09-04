@@ -17,7 +17,8 @@ class StupidFuzzer(
     task: Task,
     val iterationTimeout: Duration,
     val iterationSize: Int,
-    val maxIterations: Int
+    val maxIterations: Int,
+    val maxRandomMoveSequence: Int
 ) : Solver(task) {
 
     class BestStateWrapper(
@@ -55,7 +56,7 @@ class StupidFuzzer(
         var taskBestScore = if (iteration == 0) task.bestScoreOrMax else bestState.get().score
 
         val initState = bestState.get().state
-        var currentState = initState
+        var currentState = initState.withIncrementalSimilarity()
 
         if (iteration == 0 && Random.nextBoolean()) {
             val randomBlock = currentState.canvas.randomBlock() ?: return
@@ -79,26 +80,29 @@ class StupidFuzzer(
 
             if (!shouldContinueIteration(iteration, ind, currentStateScore, taskBestScore)) return
 
-            val newState = when (Random.nextInt(0, 10)) {
-                1, 2, 3, 4 -> {
-                    val randomCutBlock = currentState.canvas.randomBlock() ?: return
-                    val (cutState, cutBlocks) = randomCut(randomCutBlock, currentState) ?: continue
-                    val randomColorBlock = cutState.canvas.randomBlock(cutBlocks) ?: continue
-                    randomColor(randomColorBlock, cutState)
+            var newState = currentState
+            for (i in 0..Random.nextInt(maxRandomMoveSequence)) {
+                newState = when (Random.nextInt(0, 10)) {
+                    1, 2, 3, 4 -> {
+                        val randomCutBlock = newState.canvas.randomBlock() ?: return
+                        val (cutState, cutBlocks) = randomCut(randomCutBlock, newState) ?: continue
+                        val randomColorBlock = cutState.canvas.randomBlock(cutBlocks) ?: continue
+                        randomColor(randomColorBlock, cutState)
+                    }
+                    5, 6 -> {
+                        val randomColorBlock = newState.canvas.randomBlock() ?: return
+                        randomColor(randomColorBlock, newState)
+                    }
+                    7, 8 -> {
+                        val randomMergeBlock = newState.canvas.randomBlock() ?: return
+                        randomMerge(randomMergeBlock, newState) ?: continue
+                    }
+                    9 -> {
+                        val randomSwapBlock = newState.canvas.randomBlock() ?: return
+                        randomSwap(randomSwapBlock, newState) ?: continue
+                    }
+                    else -> continue
                 }
-                5, 6 -> {
-                    val randomColorBlock = currentState.canvas.randomBlock() ?: return
-                    randomColor(randomColorBlock, currentState)
-                }
-                7, 8 -> {
-                    val randomMergeBlock = currentState.canvas.randomBlock() ?: return
-                    randomMerge(randomMergeBlock, currentState) ?: continue
-                }
-                9 -> {
-                    val randomSwapBlock = currentState.canvas.randomBlock() ?: return
-                    randomSwap(randomSwapBlock, currentState) ?: continue
-                }
-                else -> continue
             }
 
             val newStateScore = newState.score
