@@ -39,7 +39,7 @@ fun main(args: Array<String>) {
             else -> taskSpec.map { it.toInt() }
         }
         runBlocking {
-            withContext(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2).asCoroutineDispatcher()) {
+            withContext(Dispatchers.Default) {
                 forEachAsync(taskIds) { taskId ->
                     val problem = problems.first { it.id == taskId }
                     val im = problem.target
