@@ -13,7 +13,7 @@ class MergeAndColorSolver(
         val storage = TacticStorage()
 
 //        state = SimilaritySwapper(task, storage)(state)
-        val merger = MergeUntilLimitTactic(task, storage, limit)
+        val merger = MergeUntilLimitTactic(task, storage, colorTolerance, limit)
         state = merger(state)
 
         state = ColorAverageTactic(task, storage, colorTolerance)(state)

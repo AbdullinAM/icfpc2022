@@ -13,7 +13,7 @@ class MergeToOneTactic(task: Task, storage: TacticStorage) : Tactic(task, storag
         val blocks = state.canvas.blocks.values
         val availableMerges = blocks.map { current ->
             current to blocks.filter { it.id != current.id && adjacent(it.shape, current.shape) }
-                .maxByOrNull { it.shape.size }
+                .minByOrNull { it.shape.size }
         }
             .filter { it.second != null }.maxByOrNull {
                 maxOf(it.first.shape.size, it.second!!.shape.size)

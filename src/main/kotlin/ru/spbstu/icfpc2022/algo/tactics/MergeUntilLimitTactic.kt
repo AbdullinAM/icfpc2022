@@ -19,7 +19,7 @@ class MergeUntilLimitTactic(
         val blocks = state.canvas.blocks.values.filter { block: Block -> block.shape.size < limit }.toList()
         val availableMerges = blocks.map { current ->
             current to blocks.filter { it.id != current.id && adjacent(it.shape, current.shape) }
-                .maxByOrNull { it.shape.size }
+                .minByOrNull { it.shape.size }
         }
             .filter { it.second != null }.maxByOrNull {
                 maxOf(it.first.shape.size, it.second!!.shape.size)
