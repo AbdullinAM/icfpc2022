@@ -143,16 +143,6 @@ data class Canvas(
         }
     }
 
-    private fun cost(base: Long, blockSize: Long) = round(base.toDouble() * size.toDouble() / blockSize).toLong()
-
-    fun costOf(move: Move): Long = when (move) {
-        is ColorMove -> cost(move.cost, blocks[move.block]!!.shape.size)
-        is LineCutMove -> cost(move.cost, blocks[move.block]!!.shape.size)
-        is MergeMove -> cost(move.cost, maxOf(blocks[move.first]!!.shape.size, blocks[move.second]!!.shape.size))
-        is PointCutMove -> cost(move.cost, blocks[move.block]!!.shape.size)
-        is SwapMove -> cost(move.cost, maxOf(blocks[move.first]!!.shape.size, blocks[move.second]!!.shape.size))
-    }
-
     fun apply(move: Move): Canvas = when (move) {
         is LineCutMove -> {
             val block = blocks[move.block]!!

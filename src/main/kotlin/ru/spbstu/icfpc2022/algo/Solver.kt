@@ -20,7 +20,7 @@ import ru.spbstu.icfpc2022.imageParser.getOrNull
 import ru.spbstu.icfpc2022.imageParser.parseImage
 import ru.spbstu.icfpc2022.imageParser.point
 import ru.spbstu.icfpc2022.imageParser.toImage
-import ru.spbstu.icfpc2022.move.Move
+import ru.spbstu.icfpc2022.move.*
 import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import ru.spbstu.ktuples.zip
 import ru.spbstu.wheels.resize
@@ -75,6 +75,11 @@ data class Task(
     val initialCanvas: Canvas,
     val bestScore: Long? = null,
 ) {
+    private val baseMoveCosts = when {
+        problemId <= 35 -> baseCostsForFirst35
+        else -> baseConstAfter35
+    }
+
     constructor(problemId: Int, initialConfig: InitialConfig) : this(
         problemId,
         parseImage("problems/$problemId.png"),
@@ -117,6 +122,7 @@ data class Task(
     inline val Pixel.left get() = targetImage.getOrNull(x - 1, y)
 
 
+    fun costOf(move: Move) = baseMoveCosts[move::class] ?: error("Unknown move type $move")
 
     init {
         infix fun Pixel?.notMatches(pixel2: Pixel?): Boolean {
@@ -141,6 +147,24 @@ data class Task(
             }
         }
     }
+
+    companion object {
+        private val baseCostsForFirst35 = mapOf(
+            LineCutMove::class to 7L,
+            PointCutMove::class to 10L,
+            ColorMove::class to 5L,
+            MergeMove::class to 3L,
+            SwapMove::class to 1L
+        )
+
+        private val baseConstAfter35 = mapOf(
+            LineCutMove::class to 2L,
+            PointCutMove::class to 3L,
+            ColorMove::class to 5L,
+            MergeMove::class to 1L,
+            SwapMove::class to 3L
+        )
+    }
 }
 
 class PersistentState(
@@ -163,8 +187,18 @@ class PersistentState(
         cost
     )
 
+    private fun cost(base: Long, blockSize: Long) = round(base.toDouble() * canvas.size.toDouble() / blockSize).toLong()
+
+    fun costOf(move: Move): Long = when (move) {
+        is ColorMove -> cost(task.costOf(move), canvas.blocks[move.block]!!.shape.size)
+        is LineCutMove -> cost(task.costOf(move), canvas.blocks[move.block]!!.shape.size)
+        is MergeMove -> cost(task.costOf(move), maxOf(canvas.blocks[move.first]!!.shape.size, canvas.blocks[move.second]!!.shape.size))
+        is PointCutMove -> cost(task.costOf(move), canvas.blocks[move.block]!!.shape.size)
+        is SwapMove -> cost(task.costOf(move), maxOf(canvas.blocks[move.first]!!.shape.size, canvas.blocks[move.second]!!.shape.size))
+    }
+
     fun move(move: Move, ignoreUI: Boolean = false): PersistentState {
-        val newCost = cost + canvas.costOf(move)
+        val newCost = cost + costOf(move)
         val newCanvas = canvas.apply(move)
         val newSimilarity = similarityCounter?.let { newCanvas.updateSimilarity(move, it) }
         return PersistentState(task, newCanvas, commands.add(move), newSimilarity, newCost)

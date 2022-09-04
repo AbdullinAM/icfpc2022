@@ -8,8 +8,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import ru.spbstu.icfpc2022.algo.*
-import ru.spbstu.icfpc2022.algo.tactics.DumpSolutions
-import ru.spbstu.icfpc2022.algo.tactics.TacticStorage
+import ru.spbstu.icfpc2022.algo.tactics.*
 import ru.spbstu.icfpc2022.canvas.Color
 import ru.spbstu.icfpc2022.canvas.Point
 import ru.spbstu.icfpc2022.canvas.Shape
@@ -29,12 +28,14 @@ class RawInitialConfigBlock(
     val blockId: Int,
     val bottomLeft: IntArray,
     val topRight: IntArray,
-    val color: IntArray
+    val color: IntArray?,
+    val pngBottomLeftPoint: IntArray?
 ) {
     fun resolveSimpleBlock(): SimpleBlock {
+        val newColor = color ?: intArrayOf(255, 255, 255, 255)
         val bl = Point(bottomLeft[0], bottomLeft[1])
         val ur = Point(topRight[0], topRight[1])
-        val c = Color(color[0], color[1], color[2], color[3])
+        val c = Color(newColor[0], newColor[1], newColor[2], newColor[3])
         return SimpleBlock(SimpleId(blockId), Shape(bl, ur), c)
     }
 }
@@ -42,11 +43,12 @@ class RawInitialConfigBlock(
 data class InitialConfig(
     val width: Int,
     val height: Int,
+    val initialPng: ImmutableImage?,
     val blocks: List<SimpleBlock>
 ) {
     companion object {
         fun default() = InitialConfig(
-            400, 400, listOf(
+            400, 400, null, listOf(
                 SimpleBlock(
                     SimpleId(0),
                     Shape(Point(0, 0), Point(400, 400)),
@@ -60,9 +62,11 @@ data class InitialConfig(
 class RawInitialConfig(
     val width: Int,
     val height: Int,
+    val sourcePngJSON: String?,
+    val sourcePngPNG: String?,
     val blocks: Array<RawInitialConfigBlock>
 ) {
-    fun resolve() = InitialConfig(width, height, blocks.map { it.resolveSimpleBlock() })
+    fun resolve() = InitialConfig(width, height, sourcePngPNG?.let { parseImage(URL(it)) }, blocks.map { it.resolveSimpleBlock() })
 }
 
 data class Problem(
