@@ -314,8 +314,8 @@ class AutocropTactic(
                 bestCrop.second.upperRightExclusive.add(shape.lowerLeftInclusive),
             )
 
-//            val bestCropAverage = computeNotBlockGeometricMedianApproximated(autocropState.image, newBlockShape)
-            val bestCropAverage = computeNotBlockAverage(autocropState.image, newBlockShape)
+            val bestCropAverage = computeNotBlockGeometricMedianApproximated(autocropState.image, newBlockShape)
+//            val bestCropAverage = computeNotBlockAverage(autocropState.image, newBlockShape)
 
             val bgColor = backgroundTactic?.resultingColor
 
