@@ -10,22 +10,40 @@ import tornadofx.launch
 
 fun main() = try {
     val problemId = 1
-    val problems = getProblems()
-    val submissions = submissions()
-    val bestSubmissions = submissions.bestSubmissions()
+//    val problems = getProblems()
+//    val submissions = submissions()
+//    val bestSubmissions = submissions.bestSubmissions()
 
-    val problem = problems.first { it.id == problemId }
-//    val problem = Problem(problemId, "huy", "huy", InitialConfig.default(), null, parseImage("problems/$problemId.png"))
+//    val problem = problems.first { it.id == problemId }
+    val problem = Problem(problemId, "huy", "huy", InitialConfig.default(), null, parseImage("problems/$problemId.png"))
     StateCollector.pathToProblemImage = "problems/$problemId.png"
     val im = problem.target
-    val bestScore = bestSubmissions[problem.id]?.score
+    val bestScore = 16818L//bestSubmissions[problem.id]?.score
     var task = Task(problem.id, im, problem.initialConfig, bestScore)
     StateCollector.task = task
-    var commands = with(MutableState(task.initialState)) {
+    var commands = with(MutableState(task.initialState.withIncrementalSimilarity())) {
+        val xSnaps = task.snapPoints.pointData.entries
+            .map { it.key to it.value.size }
+            .sortedByDescending { it.second }
+        val ySnaps = task.snapPoints.pointData.entries
+            .flatMap { xdata ->
+                xdata.value.entries.map { ydata -> xdata.key to ydata.key }
+            }
+            .groupBy { it.second }
+            .mapValues { it.value.size }
+            .map { it.toPair() }
+            .sortedByDescending { it.second }
         state = state.move(ColorMove(SimpleId(0), Color(0, 74, 173, 255)))
-        val vSplits = listOf(40, 80, 120, 160, 200, 240, 280, 320, 360)
-        val hSplits = listOf(80, 120, 160, 200, 240, 280, 320, 360)
-        val cuttedBlocks = move { pointCut(SimpleId(0), Point(vSplits[8], 40)) }
+        //                w1 | w2 | w3 | w4 | w5 | b1 | b2 | b3 | b4 | cb2| hlam
+        //                40 | 40 | 40 | 39 | 40 | 39 | 40 | 40 | 39 | 40 | 3
+        val vSplits = listOf(40, 80, 120, 159, 199, 238, 278, 318, 357)
+        //          hlam | h0 | h1 | h2 | h3 | h4 | h5 | h6 | h7 | h8 | hlam
+        //            41 | 40 | 40 | 40 | 40 | 39 | 40 | 39 | 40 | 40 | 1
+        val hSplits = listOf(81, 121, 161, 201, 240, 280, 319, 359)
+
+        val (workArea, hlam) = move { lineCut(SimpleId(0), Orientation.X, 397) }
+        val (workArea1, hlam1) = move { lineCut(workArea.id, Orientation.Y, 399) }
+        val cuttedBlocks = move { pointCut(workArea1.id, Point(vSplits[8], 41)) }
         val (white, black) = move { lineCut(cuttedBlocks.last().id, Orientation.X, vSplits[4]) }
         state = state.move(ColorMove(white.id, Color(255, 255, 255, 255)))
         state = state.move(ColorMove(black.id, Color(0, 0, 0, 255)))
