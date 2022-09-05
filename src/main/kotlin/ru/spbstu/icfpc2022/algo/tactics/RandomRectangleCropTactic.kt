@@ -110,7 +110,7 @@ class RandomRectangleCropTactic(
         val currentBlock = state.canvas.blocks[blockId]!!
         val coloredPoints = currentBlock.shape.allPoints.toList()
 
-        return (0..17).map { doTheWork(state, currentBlock, coloredPoints.shuffled().toMutableSet()) }.minBy { it.score }
+        return (0..7).map { doTheWork(state, currentBlock, coloredPoints.shuffled().toMutableSet()) }.minBy { it.score }
     }
 
     fun doTheWork(state: PersistentState, currentBlock: Block, coloredPoints: MutableSet<Point>): PersistentState {
