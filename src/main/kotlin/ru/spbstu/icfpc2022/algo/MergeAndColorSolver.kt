@@ -5,7 +5,9 @@ import ru.spbstu.icfpc2022.algo.tactics.*
 class MergeAndColorSolver(
     task: Task,
     val colorTolerance: Int,
-    val limit: Long
+    val pixelTolerance: Double,
+    val limit: Long,
+    val coloringMethod: ColoringMethod
 ) : Solver(task) {
     override fun solve(): PersistentState {
         var state = task.initialState
@@ -13,11 +15,9 @@ class MergeAndColorSolver(
         val storage = TacticStorage()
 
         state = ColorBackgroundTactic(task, storage)(state)
-        state = OverlayCropTactic(task, storage, colorTolerance)(state)
-//        val merger = MergeUntilLimitTactic(task, storage, colorTolerance, limit)
-//        state = merger(state)
+        state = RandomRectangleCropTactic(task, storage, colorTolerance, pixelTolerance, limit, coloringMethod)(state)
 
-        state = ColorAverageTactic(task, storage, colorTolerance)(state)
+//        state = ColorAverageTactic(task, storage, colorTolerance)(state)
 
         return state
     }

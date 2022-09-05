@@ -26,13 +26,15 @@ fun main(args: Array<String>) {
         val bestScore = bestSubmissions[problem.id]?.score
         var task = Task(problem.id, im, problem.initialConfig, bestScore = bestScore)
         StateCollector.turnMeOff = true
+        var localBest = Long.MAX_VALUE
         runBlocking {
             withContext(Dispatchers.Default) {
-                forEachAsync((0..50 step 5)) { colorTolerance ->
+                forEachAsync((50..200 step 10)) { colorTolerance ->
                     forEachAsync((10..20)) { pixelTolerance ->
-                        forEachAsync((generateSequence(500) { it + 500 }.take(32).asIterable())) { limit ->
+                        forEachAsync((generateSequence(1000) { it + 1000 }.take(7).asIterable())) { limit ->
+                            val coloringMethod = ColoringMethod.GEOMETRIC_MEDIAN
                             run {
-                                forEachAsync(ColoringMethod.values().asList()) { coloringMethod ->
+//                                forEachAsync(ColoringMethod.values().asList()) { coloringMethod ->
                                     try {
                                         println(
                                             "Parameters: colorTolerance = $colorTolerance," +
@@ -40,7 +42,7 @@ fun main(args: Array<String>) {
                                                     "limit = $limit, " +
                                                     "coloringMethod = $coloringMethod"
                                         )
-                                        val rectangleCropDummy = RectangleCropDummy(
+                                        val rectangleCropDummy = MergeAndColorSolver(
                                             task,
                                             colorTolerance,
                                             pixelTolerance * 0.05,
@@ -48,6 +50,11 @@ fun main(args: Array<String>) {
                                             coloringMethod
                                         )
                                         val solution = rectangleCropDummy.solve()
+                                        if (solution.score < localBest) {
+                                            val dumper = DumpSolutions(task, TacticStorage())
+                                            dumper(solution)
+                                            localBest = solution.score
+                                        }
                                         println("${solution.score} | ${if (solution.score >= task.bestScoreOrMax) "worse" else "better"} | ${task.bestScoreOrMax}")
                                         if (solution.score < task.bestScoreOrMax) {
                                             println(
@@ -77,7 +84,7 @@ fun main(args: Array<String>) {
                                         )
                                     }
                                 }
-                            }
+//                            }
                         }
                     }
                 }
