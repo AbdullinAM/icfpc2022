@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentMap
 import ru.spbstu.icfpc2022.InitialConfig
 import ru.spbstu.icfpc2022.algo.tactics.AutocropTactic
+import ru.spbstu.icfpc2022.algo.tactics.ColoringMethod
 import ru.spbstu.icfpc2022.canvas.Canvas
 import ru.spbstu.icfpc2022.canvas.Color
 import ru.spbstu.icfpc2022.canvas.Point
@@ -25,6 +26,7 @@ import ru.spbstu.icfpc2022.robovinchi.StateCollector
 import ru.spbstu.ktuples.zip
 import ru.spbstu.wheels.resize
 import java.util.TreeMap
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.round
 
 class PointHolder {
@@ -74,7 +76,9 @@ data class Task(
     val targetImage: ImmutableImage,
     val initialCanvas: Canvas,
     val bestScore: Long? = null,
+    val colorCache: ConcurrentHashMap<Pair<Shape, ColoringMethod>, Color> = ConcurrentHashMap()
 ) {
+
     private val baseMoveCosts = when {
         problemId <= 35 -> baseCostsForFirst35
         else -> baseConstAfter35

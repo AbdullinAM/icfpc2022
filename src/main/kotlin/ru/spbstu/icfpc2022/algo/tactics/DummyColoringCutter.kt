@@ -17,7 +17,7 @@ open class DummyColoringCutter(
     tacticStorage: TacticStorage,
     val limit: Long,
     val colorTolerance: Int,
-    val coloringMethod: ColoringMethod
+//    val coloringMethod: ColoringMethod
 ) : BlockTactic(task, tacticStorage) {
 
     private fun allOneColour(shape: Shape): Boolean {
@@ -39,9 +39,8 @@ open class DummyColoringCutter(
         val candidates = mutableListOf<PersistentState>()
 
         val currentBlock = state.canvas.blocks[blockId]!!
-        val avg = computeAverageColor(task.targetImage, currentBlock.shape, coloringMethod)
 
-        candidates.add(colorBlock(state, blockId, avg, colorTolerance))
+        candidates.add(colorBlockToAverageBest(state, blockId, colorTolerance))
 
         if (currentBlock.shape.size <= limit) return candidates
         if (allOneColour(currentBlock.shape)) return candidates

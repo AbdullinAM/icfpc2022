@@ -26,42 +26,32 @@ fun main(args: Array<String>) {
         val bestScore = bestSubmissions[problem.id]?.score
         var task = Task(problem.id, im, problem.initialConfig, bestScore = bestScore)
         StateCollector.turnMeOff = true
-        var localBest = Long.MAX_VALUE
         runBlocking {
             withContext(Dispatchers.Default) {
-                forEachAsync((50..200 step 10)) { colorTolerance ->
+                forEachAsync((0..50 step 5)) { colorTolerance ->
                     forEachAsync((10..20)) { pixelTolerance ->
-                        forEachAsync((generateSequence(1000) { it + 1000 }.take(7).asIterable())) { limit ->
-                            val coloringMethod = ColoringMethod.GEOMETRIC_MEDIAN
+                        forEachAsync((generateSequence(1000) { it + 1000 }.take(16).asIterable())) { limit ->
                             run {
-//                                forEachAsync(ColoringMethod.values().asList()) { coloringMethod ->
+                                run {
                                     try {
                                         println(
                                             "Parameters: colorTolerance = $colorTolerance," +
                                                     " pixelTolerance = ${pixelTolerance * 0.05}, " +
-                                                    "limit = $limit, " +
-                                                    "coloringMethod = $coloringMethod"
+                                                    "limit = $limit, "
                                         )
-                                        val rectangleCropDummy = MergeAndColorSolver(
+                                        val rectangleCropDummy = RectangleCropDummy(
                                             task,
                                             colorTolerance,
                                             pixelTolerance * 0.05,
-                                            limit.toLong(),
-                                            coloringMethod
+                                            limit.toLong()
                                         )
                                         val solution = rectangleCropDummy.solve()
-                                        if (solution.score < localBest) {
-                                            val dumper = DumpSolutions(task, TacticStorage())
-                                            dumper(solution)
-                                            localBest = solution.score
-                                        }
                                         println("${solution.score} | ${if (solution.score >= task.bestScoreOrMax) "worse" else "better"} | ${task.bestScoreOrMax}")
                                         if (solution.score < task.bestScoreOrMax) {
                                             println(
                                                 "Succeeded with parameters: colorTolerance = $colorTolerance, " +
                                                         "pixelTolerance = ${pixelTolerance * 0.05}," +
-                                                        " limit = $limit," +
-                                                        "coloringMethod = $coloringMethod"
+                                                        " limit = $limit,"
                                             )
                                             val dumper = DumpSolutions(task, TacticStorage())
                                             dumper(solution)
@@ -69,22 +59,19 @@ fun main(args: Array<String>) {
                                             val preamble =
                                                 "# bruteForce, parameters: colorTolerance = $colorTolerance, " +
                                                         "pixelTolerance = ${pixelTolerance * 0.05}," +
-                                                        " limit = $limit," +
-                                                        "coloringMethod = $coloringMethod\n"
+                                                        " limit = $limit\n"
                                             submit(problem.id, solution.commands.joinToString("\n", prefix = preamble))
-                                            task =
-                                                Task(problem.id, im, problem.initialConfig, bestScore = solution.score)
+                                            task = task.copy(bestScore = solution.score)
                                         }
                                     } catch (e: Throwable) {
                                         System.err.println(
                                             "Failed with parameters: colorTolerance = $colorTolerance, " +
                                                     "pixelTolerance = ${pixelTolerance * 0.05}, " +
-                                                    "limit = $limit, " +
-                                                    "coloringMethod = $coloringMethod"
+                                                    "limit = $limit"
                                         )
                                     }
                                 }
-//                            }
+                            }
                         }
                     }
                 }
