@@ -16,6 +16,9 @@ import ru.spbstu.icfpc2022.canvas.SimpleBlock
 import ru.spbstu.icfpc2022.canvas.SimpleId
 import ru.spbstu.icfpc2022.imageParser.parseImage
 import java.net.URL
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import kotlin.io.path.Path
 
 private const val token =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5hcHN0ZXJfMTk5N0BtYWlsLnJ1IiwiZXhwIjoxNjYyNDQyNTY1LCJvcmlnX2lhdCI6MTY2MjM1NjE2NX0.X52vfYqjxJ6jnTC81F_BWcrZdU1iUNmDSAd9QTxys7E"
@@ -66,7 +69,12 @@ class RawInitialConfig(
     val sourcePngPNG: String?,
     val blocks: Array<RawInitialConfigBlock>
 ) {
-    fun resolve() = InitialConfig(width, height, sourcePngPNG?.let { parseImage(URL(it)) }, blocks.map { it.resolveSimpleBlock() })
+    fun resolve() = InitialConfig(
+        width,
+        height,
+        sourcePngPNG?.let { parseImage(it) },
+        blocks.map { it.resolveSimpleBlock() }
+    )
 }
 
 data class Problem(
@@ -95,14 +103,14 @@ class RawProblem(
             InitialConfig.default()
         } else {
             val mapper = jacksonObjectMapper()
-            mapper.readValue(URL(initial_config_link), RawInitialConfig::class.java).resolve()
+            mapper.readValue(Path(initial_config_link).toFile(), RawInitialConfig::class.java).resolve()
         }
         val initialCanvas = if (canvas_link.isBlank()) {
             null
         } else {
-            parseImage(URL(canvas_link))
+            parseImage(canvas_link)
         }
-        val target = parseImage(URL(target_link))
+        val target = parseImage(target_link)
         return Problem(id, name, description, config, initialCanvas, target)
     }
 }
@@ -128,7 +136,59 @@ fun getProblems(): List<Problem> {
         .build()
     val response = client.newCall(request).execute()
     val mapper = jacksonObjectMapper()
-    val rawProblems = mapper.readValue(response.body!!.string(), RawProblems::class.java)
+    val body = response.body!!.string()
+    val rawProblems = mapper.readValue(body, RawProblems::class.java)
+    val downloadedProblems = downloadProblems(rawProblems)
+    mapper.writeValue(Path("problems", "problems.json").toFile(), downloadedProblems)
+    return downloadedProblems.problems.map { it.load() }
+}
+
+fun downloadLink(link: String): String {
+    if (link.isBlank()) return ""
+    val fileName = link.split("/").last()
+    val fileStream = URL(link).openStream()
+    val downloadPath = Path("problems", fileName)
+    Files.copy(fileStream, downloadPath, StandardCopyOption.REPLACE_EXISTING)
+    return downloadPath.toString()
+}
+
+fun downloadInitialConfig(link: String): String {
+    val configPath = downloadLink(link)
+    if (configPath.isEmpty()) return configPath
+    val mapper = jacksonObjectMapper()
+    val path = Path(configPath)
+    val rawInitialConfig = mapper.readValue(path.toFile(), RawInitialConfig::class.java)
+    val downloadedConfig = downloadInitialConfig(rawInitialConfig)
+    mapper.writeValue(path.toFile(), downloadedConfig)
+    return configPath
+}
+
+fun downloadInitialConfig(config: RawInitialConfig) = with(config){
+    RawInitialConfig(
+        width,
+        height,
+        sourcePngJSON?.let { downloadLink(it) },
+        sourcePngPNG?.let { downloadLink(it) },
+        blocks
+    )
+}
+
+fun downloadProblems(problems: RawProblems): RawProblems {
+    val resultProblems = problems.problems.map { problem ->
+        RawProblem(
+            id = problem.id, name = problem.name, description = problem.description,
+            canvas_link = downloadLink(problem.canvas_link),
+            initial_config_link = downloadInitialConfig(problem.initial_config_link),
+            target_link = downloadLink(problem.target_link)
+        )
+    }
+    return RawProblems(resultProblems)
+}
+
+fun getProblemsLocal(): List<Problem> {
+    val problemsFile = Path("problems", "problems.json")
+    val mapper = jacksonObjectMapper()
+    val rawProblems = mapper.readValue(problemsFile.toFile(), RawProblems::class.java)
     return rawProblems.problems.map { it.load() }
 }
 
@@ -163,7 +223,8 @@ fun List<Submission>.bestSubmissions() =
 fun shutdownClient() = client.connectionPool.evictAll()
 
 fun main() = try {
-    val problems = getProblems()
+//    val problems = getProblems()
+    val problems = getProblemsLocal()
     val submissions = submissions()
     val bestSubmissions = submissions.bestSubmissions()
 
