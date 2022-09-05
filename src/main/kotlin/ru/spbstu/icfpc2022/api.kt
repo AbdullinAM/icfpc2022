@@ -168,11 +168,12 @@ fun main() = try {
     val bestSubmissions = submissions.bestSubmissions()
 
     for (problem in problems) {
+        if (problem.id != 19) continue
         val im = problem.target
 
         val bestScore = bestSubmissions[problem.id]?.score
         val task = Task(problem.id, im, problem.initialConfig, bestScore = bestScore)
-        val rectangleCropDummy = RectangleCropDummy(task)
+        val rectangleCropDummy = MergeAndColorSolver(task, colorTolerance = 100, pixelTolerance = 0.5, limit = 5000, ColoringMethod.GEOMETRIC_MEDIAN)
         val solution = rectangleCropDummy.solve()
         val dumper = DumpSolutions(task, TacticStorage())
         dumper(solution)

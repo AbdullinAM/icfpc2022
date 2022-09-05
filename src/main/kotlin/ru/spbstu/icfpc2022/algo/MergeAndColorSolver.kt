@@ -14,6 +14,7 @@ class MergeAndColorSolver(
 
         val storage = TacticStorage()
 
+        state = MergeToOneTactic(task, storage)(state)
         state = ColorBackgroundTactic(task, storage)(state)
         state = RandomRectangleCropTactic(task, storage, colorTolerance, pixelTolerance, limit, coloringMethod)(state)
 
