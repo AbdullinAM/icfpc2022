@@ -61,8 +61,8 @@ class RandomRectangleCropTactic(
             var hasGrown = false
             if (potentialShape.upperRightExclusive.y < boundingBox.upperRightExclusive.y) {
                 val upperLine = (potentialShape.lowerLeftInclusive.x until potentialShape.upperRightExclusive.x).map {
-                    Point(it, potentialShape.upperRightExclusive.y)
-                }.map { it.pixel }
+                    Point(it, potentialShape.upperRightExclusive.y).pixel
+                }
                 if (upperLine.map { it.getCanvasColor() }.count { it.distance(targetColor) <= colorTolerance } >= (upperLine.size * pixelTolerance)) {
                     potentialShape = Shape(potentialShape.lowerLeftInclusive, potentialShape.upperRightExclusive + Point(0, 1))
                     hasGrown = true
@@ -70,8 +70,8 @@ class RandomRectangleCropTactic(
             }
             if (potentialShape.upperRightExclusive.x < boundingBox.upperRightExclusive.x) {
                 val righterLine = (potentialShape.lowerLeftInclusive.y until potentialShape.upperRightExclusive.y).map {
-                    Point(potentialShape.upperRightExclusive.x, it)
-                }.map { it.pixel }
+                    Point(potentialShape.upperRightExclusive.x, it).pixel
+                }
                 if (righterLine.map { it.getCanvasColor() }.count { it.distance(targetColor) <= colorTolerance } >= (righterLine.size * pixelTolerance)) {
                     potentialShape = Shape(potentialShape.lowerLeftInclusive, potentialShape.upperRightExclusive + Point(1, 0))
                     hasGrown = true
@@ -81,8 +81,8 @@ class RandomRectangleCropTactic(
 
             if (potentialShape.lowerLeftInclusive.y > boundingBox.lowerLeftInclusive.y) {
                 val lowerLine = (potentialShape.lowerLeftInclusive.x until potentialShape.upperRightExclusive.x).map {
-                    Point(it, potentialShape.lowerLeftInclusive.y - 1)
-                }.map { it.pixel }
+                    Point(it, potentialShape.lowerLeftInclusive.y - 1).pixel
+                }
                 if (lowerLine.map { it.getCanvasColor() }.count { it.distance(targetColor) <= colorTolerance } >= (lowerLine.size * pixelTolerance)) {
                     potentialShape = Shape(potentialShape.lowerLeftInclusive - Point(0, 1), potentialShape.upperRightExclusive)
                     hasGrown = true
@@ -91,8 +91,8 @@ class RandomRectangleCropTactic(
 
             if (potentialShape.lowerLeftInclusive.x > boundingBox.lowerLeftInclusive.x) {
                 val lefterLine = (potentialShape.lowerLeftInclusive.y until potentialShape.upperRightExclusive.y).map {
-                    Point(potentialShape.lowerLeftInclusive.x - 1, it)
-                }.map { it.pixel }
+                    Point(potentialShape.lowerLeftInclusive.x - 1, it).pixel
+                }
                 if (lefterLine.map { it.getCanvasColor() }.count { it.distance(targetColor) <= colorTolerance } >= (lefterLine.size * pixelTolerance)) {
                     potentialShape = Shape(potentialShape.lowerLeftInclusive - Point(1, 0), potentialShape.upperRightExclusive)
                     hasGrown = true

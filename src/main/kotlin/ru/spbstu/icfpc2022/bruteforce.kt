@@ -15,7 +15,7 @@ suspend fun <T, U> CoroutineScope.forEachAsync(collection: Iterable<T>, body:sus
 
 fun main(args: Array<String>) {
     try {
-        val problems = getProblems()
+        val problems = getProblemsLocal()
         val submissions = submissions()
         val bestSubmissions = submissions.bestSubmissions()
 
