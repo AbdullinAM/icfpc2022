@@ -2,10 +2,7 @@ package ru.spbstu.icfpc2022.algo.tactics
 
 import ru.spbstu.icfpc2022.algo.PersistentState
 import ru.spbstu.icfpc2022.algo.Task
-import ru.spbstu.icfpc2022.canvas.BlockId
-import ru.spbstu.icfpc2022.canvas.Color
-import ru.spbstu.icfpc2022.canvas.Point
-import ru.spbstu.icfpc2022.canvas.Shape
+import ru.spbstu.icfpc2022.canvas.*
 import ru.spbstu.icfpc2022.imageParser.euclid
 import ru.spbstu.icfpc2022.imageParser.get
 import ru.spbstu.icfpc2022.imageParser.getCanvasColor
@@ -111,8 +108,13 @@ class RandomRectangleCropTactic(
     override fun invoke(state: PersistentState): PersistentState {
         var blockId = state.canvas.blocks.keys.single()
         val currentBlock = state.canvas.blocks[blockId]!!
-        val coloredPoints = currentBlock.shape.allPoints.toMutableSet()
+        val coloredPoints = currentBlock.shape.allPoints.toList()
 
+        return (0..17).map { doTheWork(state, currentBlock, coloredPoints.shuffled().toMutableSet()) }.minBy { it.score }
+    }
+
+    fun doTheWork(state: PersistentState, currentBlock: Block, coloredPoints: MutableSet<Point>): PersistentState {
+        var blockId = currentBlock.id
         val shapeColors = mutableMapOf<Shape, Color>()
         while (coloredPoints.isNotEmpty()) {
             val randomPoint = coloredPoints.random()
@@ -135,7 +137,6 @@ class RandomRectangleCropTactic(
             val (cuttedState, colorBlockId) = cutOutShape(currentState, blockId, shape)
 
             var newState = colorBlockToAverageBest(cuttedState, colorBlockId, colorToleranceInt)
-//            var newState = cuttedState.move(ColorMove(colorBlockId, shapeColor))
 
             newState = MergeToOneTactic(task, storage)(newState)
             if (newState.score > currentState.score) continue
