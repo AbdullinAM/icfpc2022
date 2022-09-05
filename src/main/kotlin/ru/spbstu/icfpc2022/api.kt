@@ -18,7 +18,7 @@ import ru.spbstu.icfpc2022.imageParser.parseImage
 import java.net.URL
 
 private const val token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5hcHN0ZXJfMTk5N0BtYWlsLnJ1IiwiZXhwIjoxNjYyMzU1OTEzLCJvcmlnX2lhdCI6MTY2MjI2OTUxM30.YypgHoO6pKXNXtSS0ZHUmz-qM4YeT8yhDVxC2K7nS3Q"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5hcHN0ZXJfMTk5N0BtYWlsLnJ1IiwiZXhwIjoxNjYyNDQyNTY1LCJvcmlnX2lhdCI6MTY2MjM1NjE2NX0.X52vfYqjxJ6jnTC81F_BWcrZdU1iUNmDSAd9QTxys7E"
 
 private const val baseUrl = "https://robovinci.xyz/api"
 
